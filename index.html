@@ -87,7 +87,7 @@ canvas {
   <label>Bet amount:</label>
   <input id="bet" type="number" min="1" value="10">
   <button id="spin">SPIN</button>
-  <div id="coins">💰 Coins: <span id="coinCount">100</span></div>
+  <div id="coins">💰 Coins: <span id="coinCount">10</span>span></div>
 </div>
 
 <script>
@@ -143,7 +143,7 @@ function drawWheel(rotDeg){
 
     ctx.save();
     ctx.rotate(angle + slice/2);
-    ctx.translate(radius * 0.72, 0);
+    ctx.translate(radius * 0.90, 0);
     ctx.rotate(Math.PI/2);
     ctx.fillStyle = "white";
     ctx.font = "bold 18px Arial";
