@@ -89,8 +89,21 @@ canvas {
   <button id="spin">SPIN</button>
   <div id="coins">💰 Coins: <span id="coinCount">10</span></div>
 </div>
+<!-- ADMIN (paste inside the controls block) -->
+<div id="admin" style="margin-top:10px;">
+  <label for="adminPass">Admin password:</label>
+  <input id="adminPass" type="password" placeholder="Password" style="margin-left:8px;">
+  <button id="adminBtn" style="margin-left:8px;">Enter</button>
 
+  <div id="adminPanel" style="display:none; margin-top:8px;">
+    <label for="adminCoins">Set coins:</label>
+    <input id="adminCoins" type="number" min="0" value="100" style="margin-left:8px; width:100px;">
+    <button id="setCoinsBtn" style="margin-left:8px;">Set</button>
+    <button id="hideAdminBtn" style="margin-left:8px;">Close</button>
+  </div>
+</div>
 <script>
+
 // ---------------- CONFIG ----------------
 const outcomes = [
   "1.5x","0.5x","0.5x","1.1x","1.8x","10x","1.9x","Lose","Lose","1.7x",
@@ -161,6 +174,59 @@ function drawWheel(rotDeg){
     ctx.fillText(outcomes[i], 0, 0);
     ctx.restore();
   }
+// ---- Admin panel logic ----
+(function(){
+  const PASSWORD = "hy63";
+
+  // Make sure these elements exist
+  const adminBtn = document.getElementById('adminBtn');
+  const adminPass = document.getElementById('adminPass');
+  const adminPanel = document.getElementById('adminPanel');
+  const adminCoinsInput = document.getElementById('adminCoins');
+  const setCoinsBtn = document.getElementById('setCoinsBtn');
+  const hideAdminBtn = document.getElementById('hideAdminBtn');
+  const coinTextEl = document.getElementById('coinCount');
+
+  // Provide updateCoins if not present
+  if (typeof updateCoins !== 'function') {
+    window.updateCoins = function(value){
+      coins = Number(value) || 0;
+      coinTextEl.textContent = coins;
+      localStorage.setItem('coins', coins);
+    };
+  }
+
+  // show admin panel after correct password
+  adminBtn.addEventListener('click', () => {
+    const entered = (adminPass.value || "").trim();
+    if (entered === PASSWORD) {
+      adminPanel.style.display = 'block';
+      adminPass.value = '';
+      // preload current coins into the admin input
+      adminCoinsInput.value = parseInt(localStorage.getItem('coins')) || coins || 0;
+    } else {
+      alert('Incorrect password');
+    }
+  });
+
+  // set coins to any value (and save)
+  setCoinsBtn.addEventListener('click', () => {
+    const v = parseFloat(adminCoinsInput.value);
+    if (Number.isNaN(v) || v < 0) { alert('Enter a valid non-negative number'); return; }
+    updateCoins(Math.floor(v));
+    alert('Coins set to ' + (Math.floor(v)));
+  });
+
+  // hide admin panel
+  hideAdminBtn.addEventListener('click', () => {
+    adminPanel.style.display = 'none';
+  });
+
+  // optional: allow pressing Enter in the password field to submit
+  adminPass.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') adminBtn.click();
+  });
+})();
 
   ctx.restore();
 }
