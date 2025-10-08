@@ -105,10 +105,11 @@
       <label for="adminCoins">Set coins:</label>
       <input id="adminCoins" type="number" min="0" value="100" style="margin-left:8px; width:100px;">
       <button id="setCoinsBtn" style="margin-left:8px;">Set</button>
-      <button id="hideAdminBtn" style="margin-left:8px;">Close</button>
-    </div>
-  </div>
+      <button id="hideAdminBtn" style="margin-left:8px;">Close</button> 
+    </div> 
+  </div> 
 </div>
+  
 
 <script>
 // ---------------- CONFIG ----------------
@@ -242,18 +243,28 @@ spinBtn.addEventListener('click', () => {
   if (!bet || bet <= 0) return alert("Enter a valid bet!");
   if (bet > coins) return alert("Not enough coins!");
 
-  // Replace with your actual Apps Script URL
-const SHEETS_WEBHOOK = "https://script.google.com/macros/s/AKfycbxYOUR_URL_HERE/exec";
+  const SHEETS_URL = "https://script.google.com/macros/s/AKfycbxKtKXgQUKN14dMY_-Z2AT8GnrELhnFnaLzy3buIS5yPFaDBz4l5b5t5IwSOLKaX4ZuJg/exec";
 
-function sendToGoogleSheets(username, coins, result) {
-  fetch(SHEETS_WEBHOOK, {
+function updateLeaderboard(username, coins) {
+  fetch(SHEETS_URL, {
     method: "POST",
-    mode: "no-cors",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, coins, result })
+    body: JSON.stringify({ username, coins })
   });
 }
 
+async function loadLeaderboard() {
+  const res = await fetch(SHEETS_URL);
+  const data = await res.json();
+  const board = document.getElementById("leaderboardList");
+  board.innerHTML = "";
+  data.slice(0, 10).forEach((row, i) => {
+    const [name, coins] = row;
+    const li = document.createElement("li");
+    li.textContent = `${i + 1}. ${name}: ${coins} coins`;
+    board.appendChild(li);
+  });
+}
 
   // consume bet
   updateCoins(coins - bet);
