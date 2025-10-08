@@ -1,77 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>Spin the Wheel Game</title>
 <style>
-body {
-  font-family: 'Segoe UI', Arial, sans-serif;
-  text-align: center;
-  background: #0f0f18;
-  color: white;
-  margin: 0;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
-}
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    text-align: center;
+    background: #0f0f18;
+    color: white;
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+  }
 
-.wheel-container {
-  position: relative;
-  width: 500px;
-  height: 500px;
-}
+  .wheel-container {
+    position: relative;
+    width: 500px;
+    height: 500px;
+  }
 
-#arrow {
-  width: 0;
-  height: 0;
-  border-left: 20px solid transparent;
-  border-right: 20px solid transparent;
-  border-top: 35px solid red;
-  position: absolute;
-  top: -20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-}
+  #arrow {
+    width: 0;
+    height: 0;
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-top: 35px solid red;
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+  }
 
-canvas {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  border: 10px solid #fff;
-}
+  canvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 10px solid #fff;
+    display: block;
+  }
 
-#controls {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
+  #controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
 
-#bet {
-  padding: 8px;
-  font-size: 16px;
-  width: 100px;
-  text-align: center;
-}
+  #bet {
+    padding: 8px;
+    font-size: 16px;
+    width: 100px;
+    text-align: center;
+  }
 
-#spin {
-  background: #28a745;
-  border: none;
-  color: white;
-  font-size: 18px;
-  padding: 12px 25px;
-  border-radius: 8px;
-  cursor: pointer;
-}
+  #spin {
+    background: #28a745;
+    border: none;
+    color: white;
+    font-size: 18px;
+    padding: 12px 25px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
 
-#coins {
-  font-size: 20px;
-  margin-top: 15px;
-}
+  #coins { font-size: 20px; margin-top: 15px; }
+
+  /* admin small styles */
+  #admin { margin-top: 10px; }
+  #adminPanel { margin-top: 8px; display: none; }
+  button#reset { margin-left: 8px; background:#e74c3c; color:white; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -84,26 +87,30 @@ canvas {
 </div>
 
 <div id="controls">
-  <label>Bet amount:</label>
-  <input id="bet" type="number" min="1" value="10">
-  <button id="spin">SPIN</button>
+  <div>
+    <label>Bet amount:</label>
+    <input id="bet" type="number" min="1" value="10">
+    <button id="spin">SPIN</button>
+    <button id="reset">Reset Coins</button>
+  </div>
   <div id="coins">💰 Coins: <span id="coinCount">10</span></div>
-</div>
-<!-- ADMIN (paste inside the controls block) -->
-<div id="admin" style="margin-top:10px;">
-  <label for="adminPass">Admin password:</label>
-  <input id="adminPass" type="password" placeholder="Password" style="margin-left:8px;">
-  <button id="adminBtn" style="margin-left:8px;">Enter</button>
 
-  <div id="adminPanel" style="display:none; margin-top:8px;">
-    <label for="adminCoins">Set coins:</label>
-    <input id="adminCoins" type="number" min="0" value="100" style="margin-left:8px; width:100px;">
-    <button id="setCoinsBtn" style="margin-left:8px;">Set</button>
-    <button id="hideAdminBtn" style="margin-left:8px;">Close</button>
+  <!-- ADMIN (inside controls) -->
+  <div id="admin">
+    <label for="adminPass">Admin password:</label>
+    <input id="adminPass" type="password" placeholder="Password" style="margin-left:8px;">
+    <button id="adminBtn" style="margin-left:8px;">Enter</button>
+
+    <div id="adminPanel">
+      <label for="adminCoins">Set coins:</label>
+      <input id="adminCoins" type="number" min="0" value="100" style="margin-left:8px; width:100px;">
+      <button id="setCoinsBtn" style="margin-left:8px;">Set</button>
+      <button id="hideAdminBtn" style="margin-left:8px;">Close</button>
+    </div>
   </div>
 </div>
-<script>
 
+<script>
 // ---------------- CONFIG ----------------
 const outcomes = [
   "1.5x","0.5x","0.5x","1.1x","1.8x","10x","1.9x","Lose","Lose","1.7x",
@@ -119,24 +126,24 @@ const colors = [
   "#27ae60","#e74c3c","#f1c40f","#e74c3c","#16a085","#e74c3c"
 ];
 
+// ---------------- DOM ----------------
 const canvas = document.getElementById('wheel');
 const ctx = canvas.getContext('2d');
 const spinBtn = document.getElementById('spin');
+const resetBtn = document.getElementById('reset');
 const coinText = document.getElementById('coinCount');
 const betInput = document.getElementById('bet');
 
-// Load saved coins or start with 100
+// ---------------- STORAGE & COINS ----------------
 let coins = parseInt(localStorage.getItem('coins')) || 100;
-coinText.textContent = coins;
-
-// Update coins on screen and save
 function updateCoins(value) {
-  coins = value;
+  coins = Math.max(0, Math.floor(Number(value) || 0));
   coinText.textContent = coins;
   localStorage.setItem('coins', coins);
 }
+updateCoins(coins);
 
-
+// ---------------- WHEEL DRAW ----------------
 const cx = canvas.width/2, cy = canvas.height/2;
 const radius = canvas.width/2 - 10;
 const N = outcomes.length;
@@ -144,18 +151,19 @@ const sliceDeg = 360 / N;
 const RAD = Math.PI/180;
 let rotationDeg = 0;
 
-function drawWheel(rotDeg){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+function drawWheel(rotDeg) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.save();
-  ctx.translate(cx,cy);
+  ctx.translate(cx, cy);
+  // rotate so 0deg = top
   ctx.rotate((rotDeg - 90) * RAD);
 
   const slice = (2 * Math.PI) / N;
-  for(let i=0;i<N;i++){
+  for (let i = 0; i < N; i++) {
     const angle = i * slice;
     ctx.beginPath();
-    ctx.moveTo(0,0);
-    ctx.arc(0,0,radius, angle, angle + slice);
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, radius, angle, angle + slice);
     ctx.closePath();
     ctx.fillStyle = colors[i % colors.length];
     ctx.fill();
@@ -163,9 +171,10 @@ function drawWheel(rotDeg){
     ctx.lineWidth = 2;
     ctx.stroke();
 
+    // label
     ctx.save();
     ctx.rotate(angle + slice/2);
-    ctx.translate(radius * 0.90, 0);
+    ctx.translate(radius * 0.72, 0);
     ctx.rotate(Math.PI/2);
     ctx.fillStyle = "white";
     ctx.font = "bold 16px Arial";
@@ -174,115 +183,114 @@ function drawWheel(rotDeg){
     ctx.fillText(outcomes[i], 0, 0);
     ctx.restore();
   }
-// ---- Admin panel logic ----
-(function(){
-  const PASSWORD = "hy63";
-
-  // Make sure these elements exist
-  const adminBtn = document.getElementById('adminBtn');
-  const adminPass = document.getElementById('adminPass');
-  const adminPanel = document.getElementById('adminPanel');
-  const adminCoinsInput = document.getElementById('adminCoins');
-  const setCoinsBtn = document.getElementById('setCoinsBtn');
-  const hideAdminBtn = document.getElementById('hideAdminBtn');
-  const coinTextEl = document.getElementById('coinCount');
-
-  // Provide updateCoins if not present
-  if (typeof updateCoins !== 'function') {
-    window.updateCoins = function(value){
-      coins = Number(value) || 0;
-      coinTextEl.textContent = coins;
-      localStorage.setItem('coins', coins);
-    };
-  }
-
-  // show admin panel after correct password
-  adminBtn.addEventListener('click', () => {
-    const entered = (adminPass.value || "").trim();
-    if (entered === PASSWORD) {
-      adminPanel.style.display = 'block';
-      adminPass.value = '';
-      // preload current coins into the admin input
-      adminCoinsInput.value = parseInt(localStorage.getItem('coins')) || coins || 0;
-    } else {
-      alert('Incorrect password');
-    }
-  });
-
-  // set coins to any value (and save)
-  setCoinsBtn.addEventListener('click', () => {
-    const v = parseFloat(adminCoinsInput.value);
-    if (Number.isNaN(v) || v < 0) { alert('Enter a valid non-negative number'); return; }
-    updateCoins(Math.floor(v));
-    alert('Coins set to ' + (Math.floor(v)));
-  });
-
-  // hide admin panel
-  hideAdminBtn.addEventListener('click', () => {
-    adminPanel.style.display = 'none';
-  });
-
-  // optional: allow pressing Enter in the password field to submit
-  adminPass.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') adminBtn.click();
-  });
-})();
 
   ctx.restore();
 }
 
 drawWheel(rotationDeg);
 
+// ---------------- ADMIN PANEL ----------------
+(function(){
+  const PASSWORD = "hy63";
+  const adminBtn = document.getElementById('adminBtn');
+  const adminPass = document.getElementById('adminPass');
+  const adminPanel = document.getElementById('adminPanel');
+  const adminCoinsInput = document.getElementById('adminCoins');
+  const setCoinsBtn = document.getElementById('setCoinsBtn');
+  const hideAdminBtn = document.getElementById('hideAdminBtn');
+
+  adminBtn.addEventListener('click', () => {
+    const entered = (adminPass.value || "").trim();
+    if (entered === PASSWORD) {
+      adminPanel.style.display = 'block';
+      adminPass.value = '';
+      adminCoinsInput.value = parseInt(localStorage.getItem('coins')) || coins || 0;
+    } else {
+      alert('Incorrect password');
+    }
+  });
+
+  setCoinsBtn.addEventListener('click', () => {
+    const v = parseFloat(adminCoinsInput.value);
+    if (Number.isNaN(v) || v < 0) { alert('Enter a valid non-negative number'); return; }
+    updateCoins(Math.floor(v));
+    alert('Coins set to ' + Math.floor(v));
+  });
+
+  hideAdminBtn.addEventListener('click', () => {
+    adminPanel.style.display = 'none';
+  });
+
+  adminPass.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') adminBtn.click();
+  });
+})();
+
+// ---------------- RESET BUTTON ----------------
+resetBtn.addEventListener('click', () => {
+  updateCoins(100);
+  alert('Coins reset to 100');
+});
+
+// ---------------- SPIN LOGIC ----------------
 let spinning = false;
 
 spinBtn.addEventListener('click', () => {
   if (spinning) return;
-  let bet = parseInt(betInput.value);
-  if (isNaN(bet) || bet <= 0) return alert("Enter a valid bet!");
+
+  const bet = Math.floor(Number(betInput.value) || 0);
+  if (!bet || bet <= 0) return alert("Enter a valid bet!");
   if (bet > coins) return alert("Not enough coins!");
 
-coins +=win;
-coinText.textContent = coins;
+  // consume bet
+  updateCoins(coins - bet);
 
-  
   spinning = true;
   const idx = Math.floor(Math.random() * N);
   const result = outcomes[idx];
 
+  // normalize current rotation to [0,360)
   const currentNorm = ((rotationDeg % 360) + 360) % 360;
-  const sliceCenterDeg = idx * sliceDeg + sliceDeg/2;
+  // center angle of chosen slice measured from RIGHT (clockwise)
+  const sliceCenterDeg = idx * sliceDeg + sliceDeg / 2;
+  // baseRotationDeg is the rotation value (0..360) that would put that center at the TOP
   const baseRotationDeg = (360 - sliceCenterDeg) % 360;
+  // smallest positive delta from current to base
   const delta = (baseRotationDeg - currentNorm + 360) % 360;
-  const fullSpins = 6 + Math.floor(Math.random()*5);
-  const targetRotation = rotationDeg + fullSpins*360 + delta;
+  const fullSpins = 6 + Math.floor(Math.random() * 5); // 6..10 full spins
+  const targetRotation = rotationDeg + fullSpins * 360 + delta;
 
   const start = rotationDeg;
   const duration = 4200;
   const t0 = performance.now();
 
-  function step(t){
+  function step(t) {
     const elapsed = t - t0;
-    const p = Math.min(elapsed/duration, 1);
+    const p = Math.min(elapsed / duration, 1);
     const ease = 1 - Math.pow(1 - p, 3);
-    rotationDeg = start + (targetRotation - start)*ease;
+    rotationDeg = start + (targetRotation - start) * ease;
     drawWheel(rotationDeg);
-    if(p<1){
+    if (p < 1) {
       requestAnimationFrame(step);
     } else {
-      rotationDeg = baseRotationDeg + 360*Math.floor(rotationDeg/360);
+      // snap final rotation and avoid precision buildup
+      rotationDeg = baseRotationDeg + 360 * Math.floor(rotationDeg / 360);
+      // determine payout
       let win = 0;
-      if(result !== "Lose"){
-        const mult = parseFloat(result.replace("x",""));
-        win = Math.floor(bet*mult);
+      if (result !== "Lose") {
+        const mult = parseFloat(result.replace("x", ""));
+        if (!Number.isNaN(mult)) {
+          win = Math.floor(bet * mult);
+        }
         alert(`🎉 You won ${win} coins! (${result})`);
       } else {
         alert("😢 You lost your bet!");
       }
-      coins += win;
-      coinText.textContent = coins;
+      updateCoins(coins + win);
       spinning = false;
     }
   }
+
   requestAnimationFrame(step);
 });
 </script>
