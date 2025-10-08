@@ -241,8 +241,9 @@ spinBtn.addEventListener('click', () => {
   if (isNaN(bet) || bet <= 0) return alert("Enter a valid bet!");
   if (bet > coins) return alert("Not enough coins!");
 
-  coins +=win;
-  coinText.textContent = coins;
+coins +=win;
+coinText.textContent = coins;
+
   
   spinning = true;
   const idx = Math.floor(Math.random() * N);
