@@ -112,8 +112,17 @@ const spinBtn = document.getElementById('spin');
 const coinText = document.getElementById('coinCount');
 const betInput = document.getElementById('bet');
 
-let coins = 100;
+// Load saved coins or start with 100
+let coins = parseInt(localStorage.getItem('coins')) || 100;
 coinText.textContent = coins;
+
+// Update coins on screen and save
+function updateCoins(value) {
+  coins = value;
+  coinText.textContent = coins;
+  localStorage.setItem('coins', coins);
+}
+
 
 const cx = canvas.width/2, cy = canvas.height/2;
 const radius = canvas.width/2 - 10;
@@ -166,9 +175,9 @@ spinBtn.addEventListener('click', () => {
   if (isNaN(bet) || bet <= 0) return alert("Enter a valid bet!");
   if (bet > coins) return alert("Not enough coins!");
 
-  coins -= bet;
+  coins +=win;
   coinText.textContent = coins;
-
+  
   spinning = true;
   const idx = Math.floor(Math.random() * N);
   const result = outcomes[idx];
