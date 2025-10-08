@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Spin the Wheel Game</title>
+<style>
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  text-align: center;
+  background: #0f0f18;
+  color: white;
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.wheel-container {
+  position: relative;
+  width: 500px;
+  height: 500px;
+}
+
+#arrow {
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-top: 35px solid red;
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 10px solid #fff;
+}
+
+#controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+#bet {
+  padding: 8px;
+  font-size: 16px;
+  width: 100px;
+  text-align: center;
+}
+
+#spin {
+  background: #28a745;
+  border: none;
+  color: white;
+  font-size: 18px;
+  padding: 12px 25px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+#coins {
+  font-size: 20px;
+  margin-top: 15px;
+}
+</style>
+</head>
+<body>
+
+<h1>🎡 Spin the Wheel!</h1>
+
+<div class="wheel-container">
+  <div id="arrow"></div>
+  <canvas id="wheel" width="500" height="500"></canvas>
+</div>
+
+<div id="controls">
+  <label>Bet amount:</label>
+  <input id="bet" type="number" min="1" value="10">
+  <button id="spin">SPIN</button>
+  <div id="coins">💰 Coins: <span id="coinCount">100</span></div>
+</div>
+
+<script>
+// ---------------- CONFIG ----------------
+const outcomes = [
+  "1.5x","0.5x","0.5x","1.1x","1.8x","10x","1.9x","Lose","Lose","1.7x",
+  "Lose","1x","Lose","1x","Lose","Lose","1.4x","Lose","Lose","1.2x",
+  "Lose","Lose","2.0x","5.0x","2.5x","1.3x","Lose","1.6x","0.5x","Lose",
+  "2.5x","Lose","0.75x","Lose","2.0x","Lose"
+];
+
+const colors = [
+  "#2ecc71","#3498db","#9b59b6","#f1c40f","#1abc9c","#e67e22","#16a085","#e74c3c","#e74c3c","#d35400",
+  "#e74c3c","#f39c12","#e74c3c","#27ae60","#e74c3c","#e74c3c","#9b59b6","#e74c3c","#e74c3c","#f1c40f",
+  "#e74c3c","#e74c3c","#2980b9","#d35400","#8e44ad","#2ecc71","#e74c3c","#1abc9c","#f39c12","#e74c3c",
+  "#27ae60","#e74c3c","#f1c40f","#e74c3c","#16a085","#e74c3c"
+];
+
+const canvas = document.getElementById('wheel');
+const ctx = canvas.getContext('2d');
+const spinBtn = document.getElementById('spin');
+const coinText = document.getElementById('coinCount');
+const betInput = document.getElementById('bet');
+
+let coins = 100;
+coinText.textContent = coins;
+
+const cx = canvas.width/2, cy = canvas.height/2;
+const radius = canvas.width/2 - 10;
+const N = outcomes.length;
+const sliceDeg = 360 / N;
+const RAD = Math.PI/180;
+let rotationDeg = 0;
+
+function drawWheel(rotDeg){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.rotate((rotDeg - 90) * RAD);
+
+  const slice = (2 * Math.PI) / N;
+  for(let i=0;i<N;i++){
+    const angle = i * slice;
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.arc(0,0,radius, angle, angle + slice);
+    ctx.closePath();
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.fill();
+    ctx.strokeStyle = "#111";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.save();
+    ctx.rotate(angle + slice/2);
+    ctx.translate(radius * 0.72, 0);
+    ctx.rotate(Math.PI/2);
+    ctx.fillStyle = "white";
+    ctx.font = "bold 18px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(outcomes[i], 0, 0);
+    ctx.restore();
+  }
+
+  ctx.restore();
+}
+
+drawWheel(rotationDeg);
+
+let spinning = false;
+
+spinBtn.addEventListener('click', () => {
+  if (spinning) return;
+  let bet = parseInt(betInput.value);
+  if (isNaN(bet) || bet <= 0) return alert("Enter a valid bet!");
+  if (bet > coins) return alert("Not enough coins!");
+
+  coins -= bet;
+  coinText.textContent = coins;
+
+  spinning = true;
+  const idx = Math.floor(Math.random() * N);
+  const result = outcomes[idx];
+
+  const currentNorm = ((rotationDeg % 360) + 360) % 360;
+  const sliceCenterDeg = idx * sliceDeg + sliceDeg/2;
+  const baseRotationDeg = (360 - sliceCenterDeg) % 360;
+  const delta = (baseRotationDeg - currentNorm + 360) % 360;
+  const fullSpins = 6 + Math.floor(Math.random()*5);
+  const targetRotation = rotationDeg + fullSpins*360 + delta;
+
+  const start = rotationDeg;
+  const duration = 4200;
+  const t0 = performance.now();
+
+  function step(t){
+    const elapsed = t - t0;
+    const p = Math.min(elapsed/duration, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    rotationDeg = start + (targetRotation - start)*ease;
+    drawWheel(rotationDeg);
+    if(p<1){
+      requestAnimationFrame(step);
+    } else {
+      rotationDeg = baseRotationDeg + 360*Math.floor(rotationDeg/360);
+      let win = 0;
+      if(result !== "Lose"){
+        const mult = parseFloat(result.replace("x",""));
+        win = Math.floor(bet*mult);
+        alert(`🎉 You won ${win} coins! (${result})`);
+      } else {
+        alert("😢 You lost your bet!");
+      }
+      coins += win;
+      coinText.textContent = coins;
+      spinning = false;
+    }
+  }
+  requestAnimationFrame(step);
+});
+</script>
+
+</body>
+</html>
