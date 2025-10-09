@@ -149,35 +149,87 @@ async function renderLeaderboard(){ const list=await fetchLeaderboard(); list.so
 // user info
 function updateUserInfoDisplay(){ if(!username){ coinInfo.textContent="Not logged in"; coinInfo.style.color="white"; return;} let col="white"; if(rank==="VIP"||rank==="VIP+") col="var(--yellow)"; if(rank==="VIP++") col="var(--purple)"; coinInfo.style.color=col; coinInfo.textContent=`${username}: ${coins} | ${rank}`; }
 
-// set username
+// After setting username
 setUsernameBtn.addEventListener('click', async ()=>{
-const val=usernameInput.value.trim(); if(!val){alert("Enter username"); return;}
-username=val; usernameInput.disabled=true; setUsernameBtn.disabled=true;
-const existing=await getUser(username);
-if(existing){ coins=existing.coins; rank=existing.rank; userId=existing.id;} 
-else{ const created=await createUser(username); coins=100; rank="None"; userId=created.id;}
-updateUserInfoDisplay(); renderLeaderboard();
+  const val = usernameInput.value.trim();
+  if(!val){ alert("Enter username"); return; }
+  username = val;
+  usernameInput.disabled = true;
+  setUsernameBtn.disabled = true;
+
+  const existing = await getUser(username);
+  if(existing){
+    coins = existing.coins; 
+    rank = existing.rank; 
+    userId = existing.id;
+  } else { 
+    const created = await createUser(username);
+    coins = 100; 
+    rank = "None"; 
+    userId = created.id;
+  }
+
+  updateUserInfoDisplay();
+  await renderLeaderboard();
+
+  // Enable spin now that userId exists
+  spinBtn.disabled = false;
 });
 
-// spin
+
 spinBtn.addEventListener('click', ()=>{
-if(!username){alert("Set username first!"); return;} if(spinning) return;
-let bet=Math.floor(Number(betInput.value)||0); if(!bet||bet<=0){alert("Enter valid bet"); return;}
-if(bet>coins){alert("Not enough coins"); return;}
-coins-=bet; updateUserInfoDisplay(); updateUser(userId,{coins:coins,rank:rank});
-spinning=true;
-const idx=Math.floor(Math.random()*N); const result=outcomes[idx];
-const currentNorm=((rotationDeg%360)+360)%360; const sliceCenterDeg=idx*sliceDeg+sliceDeg/2;
-const baseRotationDeg=(360-sliceCenterDeg)%360; const delta=(baseRotationDeg-currentNorm+360)%360;
-const fullSpins=6+Math.floor(Math.random()*5); const targetRotation=rotationDeg+fullSpins*360+delta;
-const start=rotationDeg; const duration=4200; const t0=performance.now();
-function step(t){ const elapsed=t-t0; const p=Math.min(elapsed/duration,1); const ease=1-Math.pow(1-p,3);
-rotationDeg=start+(targetRotation-start)*ease; drawWheel(rotationDeg);
-if(p<1) requestAnimationFrame(step); else{ rotationDeg=baseRotationDeg+360*Math.floor(rotationDeg/360); let win=0;
-if(result!=="Lose"){ const mult=parseFloat(result.replace("x","")); if(!isNaN(mult)) win=Math.floor(bet*mult); alert(`🎉 You won ${win} coins! (${result})`);}
-else alert("😢 You lost your bet!");
-coins+=win; if(coins<=0) coins=100; updateUserInfoDisplay(); updateUser(userId,{coins:coins,rank:rank}); spinning=false; renderLeaderboard();}}
-requestAnimationFrame(step);
+  if(!username || !userId){ alert("Set username first!"); return; }
+  if(spinning) return;
+
+  let bet = Math.floor(Number(betInput.value) || 0);
+  if(!bet || bet <= 0){ alert("Enter a valid bet"); return; }
+  if(bet > coins){ alert("Not enough coins"); return; }
+
+  coins -= bet;
+  updateUserInfoDisplay();
+
+  spinning = true;
+  const idx = Math.floor(Math.random() * N);
+  const result = outcomes[idx];
+
+  // compute rotation
+  const currentNorm = ((rotationDeg % 360) + 360) % 360;
+  const sliceCenterDeg = idx * sliceDeg + sliceDeg/2;
+  const baseRotationDeg = (360 - sliceCenterDeg) % 360;
+  const delta = (baseRotationDeg - currentNorm + 360) % 360;
+  const fullSpins = 6 + Math.floor(Math.random()*5);
+  const targetRotation = rotationDeg + fullSpins*360 + delta;
+  const start = rotationDeg;
+  const duration = 4200;
+  const t0 = performance.now();
+
+  function step(t){
+    const elapsed = t - t0;
+    const p = Math.min(elapsed/duration, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    rotationDeg = start + (targetRotation - start) * ease;
+    drawWheel(rotationDeg);
+    if(p < 1) requestAnimationFrame(step);
+    else {
+      rotationDeg = baseRotationDeg + 360*Math.floor(rotationDeg/360);
+      let win = 0;
+      if(result !== "Lose"){
+        const mult = parseFloat(result.replace("x",""));
+        if(!isNaN(mult)) win = Math.floor(bet*mult);
+        alert(`🎉 You won ${win} coins! (${result})`);
+      } else alert("😢 You lost your bet!");
+
+      coins += win;
+      if(coins <= 0) coins = 100; // reset if zero
+      updateUserInfoDisplay();
+
+      // Update API after spin
+      updateUser(userId, {coins: coins, rank: rank});
+      renderLeaderboard();
+      spinning = false;
+    }
+  }
+  requestAnimationFrame(step);
 });
 
 // admin
