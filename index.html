@@ -57,7 +57,7 @@ canvas {
   align-items: center;
 }
 
-#bet, #username {
+#bet {
   padding: 6px;
   font-size: 16px;
   width: 120px;
@@ -91,6 +91,10 @@ canvas {
   list-style: none;
   padding-left: 0;
 }
+
+#adminPanel {
+  margin-top: 10px;
+}
 </style>
 </head>
 <body>
@@ -105,10 +109,26 @@ canvas {
 
   <div id="controls">
     <input id="username" type="text" placeholder="Enter username">
+    <button id="setUsername">Set Username</button>
     <label>Bet amount:</label>
     <input id="bet" type="number" min="1" value="10">
     <button id="spin">SPIN</button>
     <div id="coins">💰 Coins: <span id="coinCount">10</span></div>
+  </div>
+
+  <!-- Admin Panel -->
+  <div id="adminPanel">
+    <label>Password:</label>
+    <input id="adminPass" type="password" placeholder="Password">
+    <button id="adminBtn">Enter</button>
+
+    <div id="adminControls" style="display:none; margin-top:10px;">
+      <label>Set coins:</label>
+      <input id="adminCoins" type="number" min="0" value="100">
+      <button id="setCoinsBtn">Set</button>
+      <button id="resetLeaderboardBtn">Reset Leaderboard</button>
+      <button id="hideAdminBtn">Close</button>
+    </div>
   </div>
 </div>
 
@@ -139,7 +159,9 @@ const spinBtn = document.getElementById('spin');
 const coinText = document.getElementById('coinCount');
 const betInput = document.getElementById('bet');
 const usernameInput = document.getElementById('username');
+const setUsernameBtn = document.getElementById('setUsername');
 
+let username = "";
 let coins = 100;
 coinText.textContent = coins;
 
@@ -170,10 +192,10 @@ function drawWheel(rotDeg){
 
     ctx.save();
     ctx.rotate(angle+slice/2);
-    ctx.translate(radius*0.90,0);
+    ctx.translate(radius*0.75,0);
     ctx.rotate(Math.PI/2);
     ctx.fillStyle="white";
-    ctx.font="bold 16px Arial";
+    ctx.font="bold 14px Arial";
     ctx.textAlign="center";
     ctx.textBaseline="middle";
     ctx.fillText(outcomes[i],0,0);
@@ -183,8 +205,6 @@ function drawWheel(rotDeg){
 }
 
 drawWheel(rotationDeg);
-
-let spinning = false;
 
 // -------- Leaderboard logic --------
 function loadLeaderboard(){
@@ -200,7 +220,7 @@ function loadLeaderboard(){
 }
 
 function saveLeaderboard(name, coins){
-  if(!name) name = "Guest";
+  if(!name) return;
   let board = JSON.parse(localStorage.getItem('leaderboard') || "[]");
   let found = false;
   for(let i=0;i<board.length;i++){
@@ -215,15 +235,25 @@ function saveLeaderboard(name, coins){
   loadLeaderboard();
 }
 
-// -------- Spin button logic --------
-spinBtn.addEventListener('click',()=>{
-  const username = usernameInput.value.trim();
-  if(!username){ alert("Enter a username!"); return; }
+// -------- Set username --------
+setUsernameBtn.addEventListener('click',()=>{
+  const name = usernameInput.value.trim();
+  if(!name){ alert("Enter a username!"); return; }
+  username = name;
+  usernameInput.disabled = true;
+  setUsernameBtn.disabled = true;
+  coins = parseInt(localStorage.getItem('coins_'+username)) || 100;
+  coinText.textContent = coins;
+});
 
+// -------- Spin button logic --------
+let spinning = false;
+spinBtn.addEventListener('click',()=>{
+  if(!username){ alert("Set your username first!"); return; }
   if(spinning) return;
   let bet = parseInt(betInput.value);
-  if(isNaN(bet) || bet <=0) return alert("Enter a valid bet!");
-  if(bet>coins) return alert("Not enough coins!");
+  if(isNaN(bet) || bet<=0){ alert("Enter a valid bet!"); return; }
+  if(bet>coins){ alert("Not enough coins!"); return; }
 
   coins -= bet;
   coinText.textContent = coins;
@@ -262,6 +292,7 @@ spinBtn.addEventListener('click',()=>{
       }
       coins += win;
       coinText.textContent = coins;
+      localStorage.setItem('coins_'+username, coins);
       saveLeaderboard(username, coins);
       spinning = false;
     }
@@ -269,6 +300,42 @@ spinBtn.addEventListener('click',()=>{
   requestAnimationFrame(step);
 });
 
+// -------- Admin panel --------
+const PASSWORD = "hy63";
+const adminBtn = document.getElementById('adminBtn');
+const adminPass = document.getElementById('adminPass');
+const adminControls = document.getElementById('adminControls');
+const setCoinsBtn = document.getElementById('setCoinsBtn');
+const adminCoinsInput = document.getElementById('adminCoins');
+const hideAdminBtn = document.getElementById('hideAdminBtn');
+const resetLeaderboardBtn = document.getElementById('resetLeaderboardBtn');
+
+adminBtn.addEventListener('click',()=>{
+  if(adminPass.value === PASSWORD){
+    adminControls.style.display = 'block';
+    adminPass.value = '';
+  } else alert('Incorrect password');
+});
+
+setCoinsBtn.addEventListener('click',()=>{
+  const v = parseInt(adminCoinsInput.value);
+  if(isNaN(v) || v<0){ alert('Enter valid coins'); return; }
+  if(username){
+    coins = v;
+    coinText.textContent = coins;
+    localStorage.setItem('coins_'+username, coins);
+    saveLeaderboard(username, coins);
+  }
+});
+
+hideAdminBtn.addEventListener('click',()=>{ adminControls.style.display='none'; });
+
+resetLeaderboardBtn.addEventListener('click',()=>{
+  if(confirm("Reset entire leaderboard?")){
+    localStorage.removeItem('leaderboard');
+    loadLeaderboard();
+  }
+});
 loadLeaderboard();
 </script>
 
