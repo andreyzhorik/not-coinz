@@ -2,151 +2,200 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Spin the Wheel </title>
+<title>Spin the Wheel — Shared Leaderboard</title>
 <style>
-  :root{
-    --bg:#0f0f18;
-    --panel-bg:#0b0b11;
-    --white:#ffffff;
-    --yellow:#f1c40f;
-    --purple:#4819b6;
+  :root {
+    --bg: #0f0f18;
+    --white: #ffffff;
+    --yellow: #f1c40f;
+    --purple: #4819b6;
+    --red: #e74c3c;
+    --green: #2ecc71;
+    --blue: #3498db;
   }
-  body{
+  body {
     font-family: 'Segoe UI', Arial, sans-serif;
     background: var(--bg);
     color: var(--white);
-    margin:0;
-    min-height:100vh;
-    display:flex;
-    gap:28px;
-    padding:20px;
-    align-items:flex-start;
-    justify-content:center;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: row;
+    gap: 28px;
+    padding: 20px;
+    align-items: flex-start;
+    justify-content: center;
   }
-
-  /* Game column */
   .game {
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:12px;
-    width:520px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 520px;
   }
-
-  .wheel-container{ position:relative; width:420px; height:420px; }
-  #arrow{
-    position:absolute; left:50%; top:-18px; transform:translateX(-50%);
-    width:0; height:0;
-    border-left:18px solid transparent;
-    border-right:18px solid transparent;
-    border-top:30px solid #e74c3c;
-    z-index:10;
+  .wheel-container {
+    position: relative;
+    width: 420px;
+    height: 420px;
   }
-  canvas{ width:100%; height:100%; border-radius:50%; border:8px solid #fff; display:block; background:transparent; }
-
+  #arrow {
+    position: absolute;
+    left: 50%;
+    top: -18px;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 18px solid transparent;
+    border-right: 18px solid transparent;
+    border-top: 30px solid var(--red);
+    z-index: 10;
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 8px solid #fff;
+    display: block;
+    background: transparent;
+  }
   #userinfo {
-    margin-top:6px;
-    font-weight:700;
-    font-size:18px;
-    text-align:center;
+    margin-top: 6px;
+    font-weight: 700;
+    font-size: 18px;
+    text-align: center;
   }
-
   #controls {
     background: rgba(255,255,255,0.03);
-    padding:12px;
-    border-radius:8px;
-    display:flex;
-    gap:10px;
-    flex-direction:column;
-    align-items:center;
-    width:420px;
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    gap: 10px;
+    flex-direction: column;
+    align-items: center;
+    width: 420px;
   }
-
-  input[type="text"], input[type="number"], select, button {
+  input[type=text], input[type=number], select, button {
     font-family: inherit;
-    font-size:14px;
+    font-size: 14px;
   }
-
-  #username { padding:8px; width:180px; text-align:center; border-radius:6px; border:1px solid #333; background:transparent; color:var(--white); }
-  #setUsername { padding:8px 12px; border-radius:6px; cursor:pointer; background:#2d8aee; color:white; border:none; }
-
-  #bet { padding:8px; width:120px; text-align:center; border-radius:6px; border:1px solid #333; background:transparent; color:var(--white); }
-
-  #spin { padding:10px 18px; background:#28a745; border-radius:8px; color:white; border:none; cursor:pointer; font-weight:700; }
-  #spin:disabled { opacity:0.5; cursor:not-allowed; }
-
-  /* Admin panel */
+  #username {
+    padding: 8px;
+    width: 180px;
+    text-align: center;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: transparent;
+    color: var(--white);
+  }
+  #setUsername {
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    background: #2d8aee;
+    color: white;
+    border: none;
+  }
+  #bet {
+    padding: 8px;
+    width: 120px;
+    text-align: center;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: transparent;
+    color: var(--white);
+  }
+  #spin {
+    padding: 10px 18px;
+    background: #28a745;
+    border-radius: 8px;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+  }
+  #spin:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
   #adminPanel {
-    margin-top:10px;
-    width:100%;
+    margin-top: 10px;
+    width: 100%;
     background: rgba(0,0,0,0.25);
-    padding:10px;
-    border-radius:8px;
-    color:var(--white);
+    padding: 10px;
+    border-radius: 8px;
+    color: var(--white);
   }
-  #adminPanel input[type=password] { padding:6px; width:140px; border-radius:6px; background:transparent; border:1px solid #333; color:var(--white); }
-  .admin-controls { margin-top:8px; display:none; gap:8px; flex-direction:column; }
-  .admin-controls input[type=number] { padding:6px; width:120px; }
-  .admin-controls select { padding:6px; width:140px; }
-  .admin-controls button { padding:8px 10px; border-radius:6px; border:none; cursor:pointer; }
-
-  /* Leaderboard column */
+  .admin-controls {
+    margin-top: 8px;
+    display: none;
+    gap: 8px;
+    flex-direction: column;
+  }
+  .admin-controls input[type=number], .admin-controls select {
+    padding: 6px;
+    width: 120px;
+  }
+  .admin-controls button {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+  }
   .side {
-    width:260px;
+    width: 300px;
     background: rgba(255,255,255,0.03);
-    padding:12px;
-    border-radius:8px;
+    padding: 12px;
+    border-radius: 8px;
   }
-  .side h2 { margin:0 0 8px 0; }
-  #leaderboardList { list-style:none; padding-left:0; margin:0; max-height:520px; overflow:auto; }
-  #leaderboardList li { padding:6px 6px; border-bottom:1px solid rgba(255,255,255,0.03); font-weight:600; }
-
-  /* small helpers */
-  .row { display:flex; gap:8px; align-items:center; }
-  .muted { color:rgba(255,255,255,0.6); font-size:13px; }
+  .side h2 { margin: 0 0 8px 0; }
+  #leaderboardList {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+    max-height: 520px;
+    overflow-y: auto;
+  }
+  #leaderboardList li {
+    padding: 6px 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    font-weight: 600;
+  }
 </style>
 </head>
 <body>
 
 <div class="game">
   <h1>🎡 Spin the Wheel</h1>
-
   <div class="wheel-container">
     <div id="arrow"></div>
     <canvas id="wheel" width="420" height="420"></canvas>
   </div>
-
   <div id="userinfo">Not logged in</div>
-
   <div id="controls">
-    <div class="row">
+    <div style="display:flex; gap:8px;">
       <input id="username" type="text" placeholder="Enter username (once)">
       <button id="setUsername">Set Username</button>
     </div>
-
-    <div class="row">
-      <label class="muted">Bet:</label>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <label>Bet:</label>
       <input id="bet" type="number" min="1" value="10">
       <button id="spin">SPIN</button>
     </div>
-
     <div id="adminPanel">
-      <div class="row">
-        <label class="muted">Admin pass:</label>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <label>Admin pass:</label>
         <input id="adminPass" type="password" placeholder="Password">
         <button id="adminBtn">Enter</button>
       </div>
-
       <div class="admin-controls" id="adminControls">
-        <div class="row">
-          <label class="muted">Set coins:</label>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <label>Set coins:</label>
           <input id="adminCoins" type="number" min="0" value="100">
           <button id="setCoinsBtn">Set</button>
           <button id="resetUserCoinsBtn">Reset User Coins</button>
         </div>
-
-        <div class="row">
-          <label class="muted">Set rank:</label>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <label>Set rank:</label>
           <select id="adminRank">
             <option value="None">None</option>
             <option value="VIP">VIP</option>
@@ -155,8 +204,7 @@
           </select>
           <button id="setRankBtn">Set Rank</button>
         </div>
-
-        <div class="row">
+        <div style="display:flex; gap:8px;">
           <button id="resetLeaderboardBtn" style="background:#e74c3c; color:white;">Reset Leaderboard</button>
           <button id="hideAdminBtn">Close</button>
         </div>
@@ -165,7 +213,6 @@
   </div>
 </div>
 
-<!-- Leaderboard side -->
 <div class="side">
   <h2>🏆 Leaderboard</h2>
   <ul id="leaderboardList"></ul>
@@ -173,17 +220,17 @@
 
 <script>
 /* ---------------- CONFIG ---------------- */
+const API_URL = "https://68e839b2f2707e6128ca35e1.mockapi.io/players";
 const outcomes = [
-  "1.5x","0.5x","0.5x","1.1x","1.8x","Lose","10x","1.9x","Lose","Lose","1.7x",
+  "1.5x","0.5x","0.5x","1.1x","1.8x","10x","1.9x","Lose","Lose","1.7x",
   "Lose","1x","Lose","1x","Lose","Lose","1.4x","Lose","Lose","1.2x",
-  "Lose","Lose","2.0x","5.0x","Lose","2.5x","1.3x","Lose","1.6x","0.5x","Lose",
+  "Lose","Lose","2.0x","5.0x","2.5x","1.3x","Lose","1.6x","0.5x","Lose",
   "2.5x","Lose","0.75x","Lose","2.0x","Lose"
 ];
-
 const colors = [
-  "#2ecc71","#3498db","#9b59b6","#f1c40f","#1abc9c","#e74c3c","#1ceb09","#16a085","#e74c3c","#e74c3c","#d35400",
+  "#2ecc71","#3498db","#9b59b6","#f1c40f","#1abc9c","#e67e22","#16a085","#e74c3c","#e74c3c","#d35400",
   "#e74c3c","#f39c12","#e74c3c","#27ae60","#e74c3c","#e74c3c","#9b59b6","#e74c3c","#e74c3c","#f1c40f",
-  "#e74c3c","#e74c3c","#2980b9","#1ceb09","#e74c3c","#8e44ad","#2ecc71","#e74c3c","#1abc9c","#f39c12","#e74c3c",
+  "#e74c3c","#e74c3c","#2980b9","#d35400","#8e44ad","#2ecc71","#e74c3c","#1abc9c","#f39c12","#e74c3c",
   "#27ae60","#e74c3c","#f1c40f","#e74c3c","#16a085","#e74c3c"
 ];
 
@@ -207,42 +254,66 @@ const resetLeaderboardBtn = document.getElementById('resetLeaderboardBtn');
 const hideAdminBtn = document.getElementById('hideAdminBtn');
 const resetUserCoinsBtn = document.getElementById('resetUserCoinsBtn');
 
-/* ---------------- Storage & state ---------------- */
-const LB_KEY = 'wheel_leaderboard_v1';
-let username = "";         // locked once set
-let coins = 10;
-let rank = "None";         // None | VIP | VIP+ | VIP++
-const ADMIN_PASSWORD = "hy63";
+/* ---------------- State ---------------- */
+let username = "";
+let coins = 100;
+let rank = "None";
+let rotationDeg = 0;
 
-/* Leaderboard is array of {name, coins, rank} saved in LB_KEY */
-function loadLeaderboardData(){
-  try{
-    return JSON.parse(localStorage.getItem(LB_KEY) || "[]");
-  }catch(e){ return []; }
-}
-function saveLeaderboardData(board){
-  localStorage.setItem(LB_KEY, JSON.stringify(board));
-}
-
-/* get player object if exists */
-function findPlayer(name){
-  const b = loadLeaderboardData();
-  return b.find(p => p.name === name);
+/* ---------------- Utilities / API ---------------- */
+async function apiGetPlayers(){
+  try {
+    const res = await fetch(API_URL);
+    return await res.json();
+  } catch(e){
+    console.error("API GET failed:", e);
+    return [];
+  }
 }
 
-/* save/update current user into leaderboard */
-function saveCurrentToLeaderboard(){
-  if(!username) return;
-  let board = loadLeaderboardData();
-  const idx = board.findIndex(p => p.name === username);
-  const entry = { name: username, coins: coins, rank: rank };
-  if(idx >= 0) board[idx] = entry;
-  else board.push(entry);
-  saveLeaderboardData(board);
-  renderLeaderboard();
+async function apiCreateOrUpdatePlayer(){
+  if (!username) return;
+  const payload = { name: username, coins, rank };
+  // check if user exists by name
+  const all = await apiGetPlayers();
+  const existing = all.find(p => p.name === username);
+  if(existing) {
+    // use PUT to update
+    await fetch(API_URL + "/" + existing.id, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+  } else {
+    // create new
+    await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+  }
 }
 
-/* ---------------- Colors / display ---------------- */
+async function loadLeaderboard(){
+  const arr = await apiGetPlayers();
+  arr.sort((a,b) => b.coins - a.coins);
+  const ul = document.getElementById('leaderboardList');
+  ul.innerHTML = "";
+  arr.forEach((p,i) => {
+    const li = document.createElement('li');
+    // determine color based on rank
+    let liColor = "#fff";
+    if(p.rank && p.rank !== "None"){
+      if(p.rank === "VIP" || p.rank === "VIP+") liColor = getComputedStyle(document.documentElement).getPropertyValue('--yellow').trim();
+      else if(p.rank === "VIP++") liColor = getComputedStyle(document.documentElement).getPropertyValue('--purple').trim();
+    }
+    li.style.color = liColor;
+    li.textContent = `${i+1}. ${p.name}: ${p.coins} | ${p.rank || "None"}`;
+    ul.appendChild(li);
+  });
+}
+
+/* ---------------- Display user info ---------------- */
 function getColorForRank(r){
   if(!r || r === "None") return getComputedStyle(document.documentElement).getPropertyValue('--white').trim();
   if(r === "VIP" || r === "VIP+") return getComputedStyle(document.documentElement).getPropertyValue('--yellow').trim();
@@ -258,114 +329,73 @@ function updateUserInfoDisplay(){
   }
   const displayRank = (rank && rank !== "None") ? rank : "None";
   coinInfo.textContent = `${username}: ${coins} | ${displayRank}`;
-  const col = getColorForRank(rank);
-  coinInfo.style.color = col;
-  coinInfo.style.fontWeight = "700";
+  coinInfo.style.color = getColorForRank(rank);
 }
 
 /* ---------------- Wheel drawing ---------------- */
 const cx = canvas.width/2, cy = canvas.height/2;
 const radius = canvas.width/2 - 10;
 const N = outcomes.length;
-const sliceDeg = 360 / N;
-const RAD = Math.PI/180;
-let rotationDeg = 0;
 
 function drawWheel(rotDeg){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   ctx.save();
   ctx.translate(cx,cy);
-  ctx.rotate((rotDeg - 90) * RAD);
-  const slice = (2*Math.PI)/N;
-  for(let i=0;i<N;i++){
-    const angle = i*slice;
+  ctx.rotate((rotDeg - 90) * Math.PI/180);
+  const slice = (2 * Math.PI) / N;
+  for (let i = 0; i < N; i++){
+    const angle = i * slice;
     ctx.beginPath();
     ctx.moveTo(0,0);
-    ctx.arc(0,0,radius,angle,angle+slice);
+    ctx.arc(0,0, radius, angle, angle + slice);
     ctx.closePath();
-    ctx.fillStyle = colors[i % colors.length];
+    // color by outcome
+    const out = outcomes[i];
+    if(out === "Lose" || out === "0.5x" || out === "0.75x") ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--red').trim();
+    else if(out === "5.0x" || out === "10x") ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--green').trim();
+    else ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--blue').trim();
+
     ctx.fill();
     ctx.strokeStyle = "#111";
     ctx.lineWidth = 2;
     ctx.stroke();
 
     ctx.save();
-    ctx.rotate(angle+slice/2);
-    ctx.translate(radius*0.90,0);
+    ctx.rotate(angle + slice/2);
+    ctx.translate(radius * 0.90, 0);
     ctx.rotate(Math.PI/2);
-    ctx.fillStyle="white";
-    ctx.font="bold 14px Arial";
-    ctx.textAlign="center";
-    ctx.textBaseline="middle";
-    ctx.fillText(outcomes[i],0,0);
+    ctx.fillStyle = "white";
+    ctx.font = "bold 14px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(outcomes[i], 0, 0);
     ctx.restore();
   }
   ctx.restore();
 }
 drawWheel(rotationDeg);
 
-/* ---------------- Leaderboard rendering ---------------- */
-function renderLeaderboard(){
-  const list = loadLeaderboardData();
-  list.sort((a,b)=> b.coins - a.coins);
-  const ul = document.getElementById('leaderboardList');
-  ul.innerHTML = "";
-  list.slice(0,20).forEach((p,i)=>{
-    const li = document.createElement('li');
-    // color li according to player rank
-    let color = "#fff";
-    if(p.rank && p.rank !== "None"){
-      if(p.rank === "VIP" || p.rank === "VIP+") color = getComputedStyle(document.documentElement).getPropertyValue('--yellow').trim();
-      else if(p.rank === "VIP++") color = getComputedStyle(document.documentElement).getPropertyValue('--purple').trim();
-    }
-    li.style.color = color;
-    li.textContent = `${i+1}. ${p.name}: ${p.coins} | ${p.rank || "None"}`;
-    ul.appendChild(li);
-  });
-}
-
-/* ---------------- Username handling ---------------- */
-setUsernameBtn.addEventListener('click', ()=>{
-  const val = usernameInput.value.trim();
-  if(!val){ alert("Enter a username"); return; }
-  username = val;
-  usernameInput.disabled = true;
-  setUsernameBtn.disabled = true;
-
-  // Load saved coins & rank for this user from leaderboard if present
-  const existing = findPlayer(username);
-  if(existing){
-    coins = Number(existing.coins) || 10;
-    rank = existing.rank || "None";
-  } else {
-    coins = 10;
-    rank = "None";
-  }
-  updateUserInfoDisplay();
-  saveCurrentToLeaderboard();
-});
-
 /* ---------------- Spin logic ---------------- */
 let spinning = false;
-spinBtn.addEventListener('click', ()=>{
+
+spinBtn.addEventListener('click', async () => {
   if(!username){ alert("Set your username first!"); return; }
   if(spinning) return;
   const bet = Math.floor(Number(betInput.value) || 0);
   if(!bet || bet <= 0){ alert("Enter a valid bet"); return; }
   if(bet > coins){ alert("Not enough coins"); return; }
 
-  // consume bet immediately
-  coins = Math.max(0, coins - bet);
+  // deduct bet
+  coins -= bet;
   updateUserInfoDisplay();
-  saveCurrentToLeaderboard();
 
   spinning = true;
   const idx = Math.floor(Math.random()*N);
   const result = outcomes[idx];
 
-  // normalization math to land slice under arrow
+  // compute target rotation
   const currentNorm = ((rotationDeg % 360) + 360) % 360;
-  const sliceCenterDeg = idx * sliceDeg + sliceDeg/2;
+  const sliceCenterDeg = idx * (360 / N) + (360 / N) / 2;
   const baseRotationDeg = (360 - sliceCenterDeg) % 360;
   const delta = (baseRotationDeg - currentNorm + 360) % 360;
   const fullSpins = 6 + Math.floor(Math.random()*5);
@@ -381,81 +411,118 @@ spinBtn.addEventListener('click', ()=>{
     const ease = 1 - Math.pow(1 - p, 3);
     rotationDeg = start + (targetRotation - start) * ease;
     drawWheel(rotationDeg);
-    if(p < 1) requestAnimationFrame(step);
-    else {
+    if(p < 1) {
+      requestAnimationFrame(step);
+    } else {
       // finalize
       rotationDeg = baseRotationDeg + 360 * Math.floor(rotationDeg / 360);
       let win = 0;
       if(result !== "Lose"){
         const mult = parseFloat(result.replace("x",""));
-        if(!Number.isNaN(mult)) win = Math.floor(bet * mult);
-        alert(`🎉 You won ${win} coins! (${result})`);
-      } else {
-        alert("😢 You lost your bet!");
+        if(!isNaN(mult)) win = Math.floor(bet * mult);
       }
-      coins = Math.max(0, coins + win);
+      if(win <= 0){
+        // if lose or no winnings, and coins now 0 or less, reset to 100
+        if(coins <= 0) {
+          coins = 100;
+        }
+      } else {
+        coins += win;
+      }
       updateUserInfoDisplay();
-      saveCurrentToLeaderboard();
+      await apiCreateOrUpdatePlayer();
+      loading = false;
       spinning = false;
+      await loadLeaderboard();
+      alert(result === "Lose" ? "😢 You lost!" : `🎉 You won ${win} coins! (${result})`);
     }
   }
   requestAnimationFrame(step);
 });
 
-/* ---------------- Admin panel ---------------- */
-adminBtn.addEventListener('click', ()=>{
-  if(adminPass.value === ADMIN_PASSWORD){
-    adminControls.style.display = 'flex';
-    adminPass.value = '';
-    // preload admin inputs with current user data
-    adminCoinsInput.value = coins || 100;
-    adminRankSelect.value = rank || "None";
+/* ---------------- Admin logic ---------------- */
+adminBtn.addEventListener('click', () => {
+  if(adminPass.value === "hy63"){
+    adminControls.style.display = "flex";
+    adminPass.value = "";
+    adminCoinsInput.value = coins;
+    adminRankSelect.value = rank;
   } else {
-    alert('Incorrect password');
+    alert("Incorrect password");
   }
 });
 
-setCoinsBtn.addEventListener('click', ()=>{
+setCoinsBtn.addEventListener('click', () => {
+  if(!username){ alert("Set your username first"); return; }
   const v = Math.floor(Number(adminCoinsInput.value) || 0);
-  if(!username){ alert("Set a username first to edit that user"); return; }
-  coins = Math.max(0, v);
+  coins = v;
   updateUserInfoDisplay();
-  saveCurrentToLeaderboard();
-  alert('Coins set to ' + coins);
+  apiCreateOrUpdatePlayer();
+  loadLeaderboard();
+  alert("Coins set to " + coins);
 });
 
-setRankBtn.addEventListener('click', ()=>{
-  if(!username){ alert("Set a username first to edit that user"); return; }
+setRankBtn.addEventListener('click', () => {
+  if(!username){ alert("Set username first"); return; }
   const r = adminRankSelect.value || "None";
   rank = r;
   updateUserInfoDisplay();
-  saveCurrentToLeaderboard();
-  alert('Rank set to ' + rank);
+  apiCreateOrUpdatePlayer();
+  loadLeaderboard();
+  alert("Rank set to " + rank);
 });
 
-resetUserCoinsBtn.addEventListener('click', ()=>{
-  if(!username){ alert("Set a username first"); return; }
-  if(confirm("Reset current user's coins to 10?")){
-    coins = 10;
+resetUserCoinsBtn.addEventListener('click', () => {
+  if(!username){ alert("Set username first"); return; }
+  if(confirm("Reset your coins to 100?")) {
+    coins = 100;
     updateUserInfoDisplay();
-    saveCurrentToLeaderboard();
+    apiCreateOrUpdatePlayer();
+    loadLeaderboard();
   }
 });
 
-resetLeaderboardBtn.addEventListener('click', ()=>{
-  if(confirm("Reset entire leaderboard (all saved players)?")){
-    localStorage.removeItem(LB_KEY);
-    renderLeaderboard();
+resetLeaderboardBtn.addEventListener('click', async () => {
+  if(confirm("Reset entire leaderboard? That deletes all players!")) {
+    // delete all entries in mockapi
+    const arr = await apiGetPlayers();
+    for (const p of arr) {
+      await fetch(API_URL + "/" + p.id, { method: "DELETE" });
+    }
+    await loadLeaderboard();
     alert("Leaderboard cleared");
   }
 });
 
-hideAdminBtn.addEventListener('click', ()=>{
-  adminControls.style.display = 'none';
+hideAdminBtn.addEventListener('click', () => {
+  adminControls.style.display = "none";
+});
+
+/* ---------------- Username setting ---------------- */
+setUsernameBtn.addEventListener('click', async () => {
+  const val = usernameInput.value.trim();
+  if(!val){ alert("Enter a username"); return; }
+  username = val;
+  usernameInput.disabled = true;
+  setUsernameBtn.disabled = true;
+
+  // try load from API
+  const arr = await apiGetPlayers();
+  const existing = arr.find(p => p.name === username);
+  if(existing){
+    coins = Number(existing.coins) || 100;
+    rank = existing.rank || "None";
+  } else {
+    coins = 100;
+    rank = "None";
+    await apiCreateOrUpdatePlayer();
+  }
+  updateUserInfoDisplay();
+  await loadLeaderboard();
 });
 
 /* ---------------- Init ---------------- */
-renderLeaderboard();
+loadLeaderboard();
 updateUserInfoDisplay();
 </script>
 
