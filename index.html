@@ -131,7 +131,7 @@ const angle=i*slice;
 ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,radius,angle,angle+slice); ctx.closePath();
 ctx.fillStyle=colors[i%colors.length]; ctx.fill();
 ctx.strokeStyle="#111"; ctx.lineWidth=2; ctx.stroke();
-ctx.save(); ctx.rotate(angle+slice/2); ctx.translate(radius*0.72,0); ctx.rotate(Math.PI/2);
+ctx.save(); ctx.rotate(angle+slice/2); ctx.translate(radius*0.90,0); ctx.rotate(Math.PI/2);
 ctx.fillStyle="white"; ctx.font="bold 14px Arial"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(outcomes[i],0,0);
 ctx.restore();
 }
