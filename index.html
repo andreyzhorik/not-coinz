@@ -9,7 +9,6 @@
   --panel-bg:#0b0b11;
   --white:#ffffff;
   --yellow:#f1c40f;
-  --lightyellow:#ffff88;
   --purple:#4819b6;
 }
 body{
@@ -24,30 +23,34 @@ body{
   align-items:flex-start;
   justify-content:center;
 }
-.game{display:flex;flex-direction:column;align-items:center;gap:12px;width:520px;}
+
+/* Game column */
+.game { display:flex; flex-direction:column; align-items:center; gap:12px; width:520px; }
 .wheel-container{ position:relative; width:420px; height:420px; }
-#arrow{position:absolute; left:50%; top:-18px; transform:translateX(-50%);
-  width:0; height:0; border-left:18px solid transparent; border-right:18px solid transparent;
-  border-top:30px solid #e74c3c; z-index:10;}
+#arrow{ position:absolute; left:50%; top:-18px; transform:translateX(-50%); width:0; height:0;
+  border-left:18px solid transparent; border-right:18px solid transparent; border-top:30px solid #e74c3c; z-index:10; }
 canvas{ width:100%; height:100%; border-radius:50%; border:8px solid #fff; display:block; background:transparent; }
 #userinfo { margin-top:6px; font-weight:700; font-size:18px; text-align:center; }
 #controls { background: rgba(255,255,255,0.03); padding:12px; border-radius:8px; display:flex; gap:10px; flex-direction:column; align-items:center; width:420px; }
-input, select, button { font-family: inherit; font-size:14px; }
-input[type=text]{padding:8px;width:180px;text-align:center;border-radius:6px;border:1px solid #333;background:transparent;color:var(--white);}
-button{cursor:pointer;}
+input[type="text"], input[type="number"], select, button { font-family: inherit; font-size:14px; }
+#username { padding:8px; width:180px; text-align:center; border-radius:6px; border:1px solid #333; background:transparent; color:var(--white); }
+#setUsername { padding:8px 12px; border-radius:6px; cursor:pointer; background:#2d8aee; color:white; border:none; }
 #bet { padding:8px; width:120px; text-align:center; border-radius:6px; border:1px solid #333; background:transparent; color:var(--white); }
-#spin { padding:10px 18px; background:#28a745; border-radius:8px; color:white; border:none; font-weight:700; }
+#spin { padding:10px 18px; background:#28a745; border-radius:8px; color:white; border:none; cursor:pointer; font-weight:700; }
 #spin:disabled { opacity:0.5; cursor:not-allowed; }
+/* Admin panel */
 #adminPanel { margin-top:10px; width:100%; background: rgba(0,0,0,0.25); padding:10px; border-radius:8px; color:var(--white); }
 #adminPanel input[type=password] { padding:6px; width:140px; border-radius:6px; background:transparent; border:1px solid #333; color:var(--white); }
 .admin-controls { margin-top:8px; display:none; gap:8px; flex-direction:column; }
 .admin-controls input[type=number] { padding:6px; width:120px; }
 .admin-controls select { padding:6px; width:140px; }
 .admin-controls button { padding:8px 10px; border-radius:6px; border:none; cursor:pointer; }
+/* Leaderboard column */
 .side { width:260px; background: rgba(255,255,255,0.03); padding:12px; border-radius:8px; }
 .side h2 { margin:0 0 8px 0; }
 #leaderboardList { list-style:none; padding-left:0; margin:0; max-height:520px; overflow:auto; }
 #leaderboardList li { padding:6px 6px; border-bottom:1px solid rgba(255,255,255,0.03); font-weight:600; }
+/* small helpers */
 .row { display:flex; gap:8px; align-items:center; }
 .muted { color:rgba(255,255,255,0.6); font-size:13px; }
 </style>
@@ -109,13 +112,18 @@ button{cursor:pointer;}
 </div>
 
 <script>
-const outcomes = ["1.5x","0.5x","0.5x","1.1x","1.8x","10x","1.9x","Lose","Lose","1.7x","Lose","1x","Lose","1x","Lose","Lose","1.4x","Lose","Lose","1.2x","Lose","Lose","2.0x","5.0x","2.5x","1.3x","Lose","1.6x","0.5x","Lose","2.5x","Lose","0.75x","Lose","2.0x","Lose"];
-const colors = outcomes.map(v=>{
-  if(["Lose","0.5x","0.75x"].includes(v)) return "#e74c3c";
-  if(["5.0x","10x"].includes(v)) return "#2ecc71";
-  return "#3498db";
-});
+// ---------------- CONFIG ----------------
+const API_URL = 'https://68e839b2f2707e6128ca35e1.mockapi.io/players';
+const outcomes = ["1.5x","0.5x","0.5x","1.1x","1.8x","10x","1.9x","Lose","Lose","1.7x",
+  "Lose","1x","Lose","1x","Lose","Lose","1.4x","Lose","Lose","1.2x",
+  "Lose","Lose","2.0x","5.0x","2.5x","1.3x","Lose","1.6x","0.5x","Lose",
+  "2.5x","Lose","0.75x","Lose","2.0x","Lose"];
+const colors = ["#2ecc71","#3498db","#9b59b6","#f1c40f","#1abc9c","#e67e22","#16a085","#e74c3c","#e74c3c","#d35400",
+"#e74c3c","#f39c12","#e74c3c","#27ae60","#e74c3c","#e74c3c","#9b59b6","#e74c3c","#e74c3c","#f1c40f",
+"#e74c3c","#e74c3c","#2980b9","#d35400","#8e44ad","#2ecc71","#e74c3c","#1abc9c","#f39c12","#e74c3c",
+"#27ae60","#e74c3c","#f1c40f","#e74c3c","#16a085","#e74c3c"];
 
+// ---------------- DOM ----------------
 const canvas = document.getElementById('wheel');
 const ctx = canvas.getContext('2d');
 const spinBtn = document.getElementById('spin');
@@ -135,90 +143,139 @@ const resetLeaderboardBtn = document.getElementById('resetLeaderboardBtn');
 const hideAdminBtn = document.getElementById('hideAdminBtn');
 const resetUserCoinsBtn = document.getElementById('resetUserCoinsBtn');
 
-const LB_KEY='wheel_leaderboard_v2';
+let username="", coins=100, rank="None", userId=null;
+const N=outcomes.length;
+const sliceDeg = 360/N;
+const RAD = Math.PI/180;
+let rotationDeg=0;
+const cx=canvas.width/2, cy=canvas.height/2;
+const radius=canvas.width/2-10;
 const ADMIN_PASSWORD="ghd87";
 
-let username="", coins=100, rank="None", spinning=false;
-
-function loadLeaderboardData(){ try{return JSON.parse(localStorage.getItem(LB_KEY)||"[]");}catch(e){return[];} }
-function saveLeaderboardData(board){ localStorage.setItem(LB_KEY, JSON.stringify(board)); }
-function findPlayer(name){ return loadLeaderboardData().find(p=>p.name===name); }
-function saveCurrentToLeaderboard(){ if(!username) return; let board=loadLeaderboardData(); const idx=board.findIndex(p=>p.name===username); const entry={name:username,coins,rank}; if(idx>=0) board[idx]=entry; else board.push(entry); saveLeaderboardData(board); renderLeaderboard(); }
-
-function getColorForRank(r){ if(!r||r==="None") return getComputedStyle(document.documentElement).getPropertyValue('--white').trim(); if(r==="VIP") return getComputedStyle(document.documentElement).getPropertyValue('--lightyellow').trim(); if(r==="VIP+") return getComputedStyle(document.documentElement).getPropertyValue('--yellow').trim(); if(r==="VIP++") return getComputedStyle(document.documentElement).getPropertyValue('--purple').trim(); return "#fff"; }
-
-function updateUserInfoDisplay(){ if(!username){ coinInfo.textContent="Not logged in"; coinInfo.style.color="#fff"; return; } coinInfo.textContent=`${username}: ${coins} | ${rank}`; coinInfo.style.color=getColorForRank(rank); coinInfo.style.fontWeight="700"; }
-
-function drawWheel(rotationDeg){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.save(); ctx.translate(canvas.width/2,canvas.height/2); ctx.rotate((rotationDeg-90)*Math.PI/180);
-  const slice = 2*Math.PI/outcomes.length;
-  for(let i=0;i<outcomes.length;i++){
-    const angle=i*slice;
-    ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,canvas.width/2-10,angle,angle+slice); ctx.closePath();
-    ctx.fillStyle=colors[i]; ctx.fill(); ctx.strokeStyle="#111"; ctx.lineWidth=2; ctx.stroke();
-    ctx.save(); ctx.rotate(angle+slice/2); ctx.translate((canvas.width/2-10)*0.90,0); ctx.rotate(Math.PI/2); ctx.fillStyle="#fff"; ctx.font="bold 14px Arial"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(outcomes[i],0,0); ctx.restore();
-  } ctx.restore();
+// ---------------- Fetch leaderboard ----------------
+async function fetchLeaderboard(){ 
+  try { const r=await fetch(API_URL); return await r.json(); } 
+  catch(e){ console.error(e); return []; } 
+}
+async function getUser(name){
+  try { const users = await fetchLeaderboard(); return users.find(u=>u.name===name); } 
+  catch(e){ return null; }
+}
+async function createUser(name){
+  try { const r = await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:name,coins:100,rank:"None"})}); return await r.json(); } 
+  catch(e){ return null; }
+}
+async function updateUser(id,obj){
+  try{ await fetch(`${API_URL}/${id}`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(obj)});} 
+  catch(e){ console.error("Failed to update user", e);}
 }
 
-let rotationDeg=0;
+// ---------------- Wheel ----------------
+function drawWheel(rotDeg){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.rotate((rotDeg-90)*RAD);
+  const slice = 2*Math.PI/N;
+  for(let i=0;i<N;i++){
+    const angle=i*slice;
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,radius,angle,angle+slice); ctx.closePath();
+    ctx.fillStyle=colors[i%colors.length]; ctx.fill();
+    ctx.strokeStyle="#111"; ctx.lineWidth=2; ctx.stroke();
+    ctx.save(); ctx.rotate(angle+slice/2); ctx.translate(radius*0.72,0); ctx.rotate(Math.PI/2);
+    ctx.fillStyle="white"; ctx.font="bold 14px Arial"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(outcomes[i],0,0);
+    ctx.restore();
+  }
+  ctx.restore();
+}
 drawWheel(rotationDeg);
 
-function renderLeaderboard(){
-  const list=loadLeaderboardData().sort((a,b)=>b.coins-a.coins);
-  const ul=document.getElementById('leaderboardList'); ul.innerHTML="";
+// ---------------- Leaderboard ----------------
+async function renderLeaderboard(){
+  const list = await fetchLeaderboard();
+  list.sort((a,b)=>b.coins-a.coins);
+  const ul = document.getElementById('leaderboardList');
+  ul.innerHTML="";
   list.slice(0,20).forEach((p,i)=>{
-    const li=document.createElement('li'); li.style.color=getColorForRank(p.rank); li.textContent=`${i+1}. ${p.name}: ${p.coins} | ${p.rank}`; ul.appendChild(li);
+    const li=document.createElement('li');
+    let color="#fff"; if(p.rank==="VIP"||p.rank==="VIP+") color="var(--yellow)"; if(p.rank==="VIP++") color="var(--purple)";
+    li.style.color=color;
+    li.textContent=`${i+1}. ${p.name}: ${p.coins} | ${p.rank||"None"}`;
+    ul.appendChild(li);
   });
 }
 
-/* Username handling */
-setUsernameBtn.addEventListener('click',()=>{
-  const val=usernameInput.value.trim(); if(!val){ alert("Enter username"); return; }
+// ---------------- User ----------------
+function updateUserInfoDisplay(){
+  if(!username){ coinInfo.textContent="Not logged in"; coinInfo.style.color="white"; return; }
+  let col="white"; if(rank==="VIP"||rank==="VIP+") col="var(--yellow)"; if(rank==="VIP++") col="var(--purple)";
+  coinInfo.style.color=col;
+  coinInfo.textContent=`${username}: ${coins} | ${rank}`;
+}
+
+// ---------------- Username set ----------------
+setUsernameBtn.addEventListener('click', async ()=>{
+  const val=usernameInput.value.trim();
+  if(!val){ alert("Enter username"); return; }
   username=val; usernameInput.disabled=true; setUsernameBtn.disabled=true;
-  const existing=findPlayer(username); if(existing){ coins=Number(existing.coins)||100; rank=existing.rank||"None"; } else{ coins=100; rank="None"; }
-  updateUserInfoDisplay(); saveCurrentToLeaderboard();
+  const existing = await getUser(username);
+  if(existing){ coins=existing.coins; rank=existing.rank; userId=existing.id; } 
+  else { const created=await createUser(username); if(created) userId=created.id; coins=100; rank="None"; }
+  updateUserInfoDisplay(); renderLeaderboard();
 });
 
-/* Spin logic */
-spinBtn.addEventListener('click',()=>{
+// ---------------- Spin ----------------
+let spinning=false;
+spinBtn.addEventListener('click', async ()=>{
   if(!username){ alert("Set username first!"); return; }
   if(spinning) return;
-  const bet=Math.floor(Number(betInput.value)||0); if(!bet||bet<=0){ alert("Enter valid bet"); return; }
+  let bet=Math.floor(Number(betInput.value)||0); if(!bet||bet<=0){ alert("Enter valid bet"); return; }
   if(bet>coins){ alert("Not enough coins"); return; }
-  coins=Math.max(0,coins-bet); updateUserInfoDisplay(); saveCurrentToLeaderboard();
-  spinning=true; spinBtn.disabled=true;
-  const idx=Math.floor(Math.random()*outcomes.length);
-  const result=outcomes[idx];
-  const currentNorm=((rotationDeg%360)+360)%360;
-  const sliceDeg=360/outcomes.length;
-  const sliceCenterDeg=idx*sliceDeg+sliceDeg/2;
-  const baseRotation=(360-sliceCenterDeg)%360;
-  const fullSpins=6+Math.floor(Math.random()*5);
-  const targetRotation=rotationDeg+fullSpins*360+((baseRotation-currentNorm+360)%360);
+
+  coins-=bet; updateUserInfoDisplay(); await updateUser(userId,{coins:coins,rank:rank});
+  spinning=true;
+  const idx=Math.floor(Math.random()*N); const result=outcomes[idx];
+  const currentNorm=((rotationDeg%360)+360)%360; const sliceCenterDeg=idx*sliceDeg+sliceDeg/2;
+  const baseRotationDeg=(360-sliceCenterDeg)%360; const delta=(baseRotationDeg-currentNorm+360)%360;
+  const fullSpins=6+Math.floor(Math.random()*5); const targetRotation=rotationDeg+fullSpins*360+delta;
   const start=rotationDeg; const duration=4200; const t0=performance.now();
   function step(t){
     const elapsed=t-t0; const p=Math.min(elapsed/duration,1); const ease=1-Math.pow(1-p,3);
     rotationDeg=start+(targetRotation-start)*ease; drawWheel(rotationDeg);
     if(p<1) requestAnimationFrame(step); else{
-      rotationDeg=baseRotation+360*Math.floor(rotationDeg/360);
-      let win=0; if(result!=="Lose"){ const mult=parseFloat(result.replace("x","")); if(!isNaN(mult)) win=Math.floor(bet*mult); alert(`🎉 You won ${win} coins! (${result})`); } else alert("😢 You lost your bet!");
-      coins=Math.max(0,coins+win); if(coins===0) coins=100; updateUserInfoDisplay(); saveCurrentToLeaderboard(); spinning=false; spinBtn.disabled=false;
+      rotationDeg=baseRotationDeg+360*Math.floor(rotationDeg/360); let win=0;
+      if(result!=="Lose"){ const mult=parseFloat(result.replace("x","")); if(!isNaN(mult)) win=Math.floor(bet*mult); alert(`🎉 You won ${win} coins! (${result})`);}
+      else alert("😢 You lost your bet!");
+      coins+=win; if(coins<=0) coins=100;
+      updateUserInfoDisplay(); await updateUser(userId,{coins:coins,rank:rank}); spinning=false; renderLeaderboard();
     }
-  } requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
 });
 
-/* Admin panel */
-adminBtn.addEventListener('click',()=>{
-  if(adminPass.value===ADMIN_PASSWORD){ adminControls.style.display='flex'; adminPass.value=''; adminCoinsInput.value=coins; adminRankSelect.value=rank; } else alert('Incorrect password');
+// ---------------- Admin ----------------
+adminBtn.addEventListener('click', ()=>{
+  if(adminPass.value===ADMIN_PASSWORD){ adminControls.style.display='flex'; adminPass.value=''; adminCoinsInput.value=coins; adminRankSelect.value=rank; } 
+  else alert("Incorrect password");
 });
-setCoinsBtn.addEventListener('click',()=>{ coins=Math.max(0,Math.floor(Number(adminCoinsInput.value)||0)); updateUserInfoDisplay(); saveCurrentToLeaderboard(); alert('Coins set to '+coins); });
-setRankBtn.addEventListener('click',()=>{ rank=adminRankSelect.value||"None"; updateUserInfoDisplay(); saveCurrentToLeaderboard(); alert('Rank set to '+rank); });
-resetUserCoinsBtn.addEventListener('click',()=>{ if(confirm("Reset current user's coins to 100?")){ coins=100; updateUserInfoDisplay(); saveCurrentToLeaderboard(); } });
-resetLeaderboardBtn.addEventListener('click',()=>{ if(confirm("Reset entire leaderboard?")){ localStorage.removeItem(LB_KEY); renderLeaderboard(); alert("Leaderboard cleared"); } });
-hideAdminBtn.addEventListener('click',()=>{ adminControls.style.display='none'; });
+setCoinsBtn.addEventListener('click', async ()=>{
+  coins=Math.max(0,Math.floor(Number(adminCoinsInput.value)||0)); updateUserInfoDisplay();
+  await updateUser(userId,{coins:coins,rank:rank}); alert("Coins set to "+coins); renderLeaderboard();
+});
+setRankBtn.addEventListener('click', async ()=>{
+  rank=adminRankSelect.value||"None"; updateUserInfoDisplay(); await updateUser(userId,{coins:coins,rank:rank}); alert("Rank set to "+rank); renderLeaderboard();
+});
+resetUserCoinsBtn.addEventListener('click', async ()=>{
+  if(!username) return alert("Set username first"); if(confirm("Reset coins to 100?")){ coins=100; updateUserInfoDisplay(); await updateUser(userId,{coins:coins,rank:rank}); renderLeaderboard(); }
+});
+resetLeaderboardBtn.addEventListener('click', async ()=>{
+  if(confirm("Reset leaderboard?")){ const list=await fetchLeaderboard(); for(const u of list) await updateUser(u.id,{coins:100,rank:"None"}); renderLeaderboard(); alert("Leaderboard reset"); }
+});
+hideAdminBtn.addEventListener('click', ()=>{ adminControls.style.display='none'; });
 
-renderLeaderboard(); updateUserInfoDisplay();
+// ---------------- Init ----------------
+drawWheel(rotationDeg); renderLeaderboard(); updateUserInfoDisplay();
+setInterval(renderLeaderboard,5000); // auto-refresh
 </script>
 </body>
 </html>
