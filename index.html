@@ -192,10 +192,10 @@ function drawWheel(rotDeg){
 
     ctx.save();
     ctx.rotate(angle+slice/2);
-    ctx.translate(radius*0.75,0);
+    ctx.translate(radius*0.90,0);
     ctx.rotate(Math.PI/2);
     ctx.fillStyle="white";
-    ctx.font="bold 14px Arial";
+    ctx.font="bold 13px Arial";
     ctx.textAlign="center";
     ctx.textBaseline="middle";
     ctx.fillText(outcomes[i],0,0);
@@ -242,7 +242,7 @@ setUsernameBtn.addEventListener('click',()=>{
   username = name;
   usernameInput.disabled = true;
   setUsernameBtn.disabled = true;
-  coins = parseInt(localStorage.getItem('coins_'+username)) || 100;
+  coins = parseInt(localStorage.getItem('coins_'+username)) || 10;
   coinText.textContent = coins;
 });
 
