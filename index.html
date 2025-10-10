@@ -156,7 +156,13 @@
 </div>
 
 <script>
-/* ---------------- CONFIG ---------------- */
+/* ---------------- WHEEL CONFIG & DRAWING ---------------- */
+const canvas = document.getElementById('wheel');
+const ctx = canvas.getContext('2d');
+const cx = canvas.width / 2;
+const cy = canvas.height / 2;
+const radius = canvas.width / 2 - 10;
+
 const outcomes = [
   "1.5x","0.5x","0.5x","1.1x","1.8x","10x","1.9x","Lose","Lose","1.7x",
   "Lose","1x","Lose","1x","Lose","Lose","1.4x","Lose","Lose","1.2x",
@@ -170,6 +176,53 @@ const colors = [
   "#e74c3c","#e74c3c","#2ecc71","#27ae60","#2ecc71","#3498db","#e74c3c","#3498db","#e74c3c","#e74c3c",
   "#2ecc71","#e74c3c","#e74c3c","#e74c3c","#2ecc71","#e74c3c"
 ];
+
+let rotationDeg = 0;
+const N = outcomes.length;
+const sliceDeg = 360 / N;
+
+function drawWheel(rotDeg){
+  ctx.clearRect(0,0,canvas.width,canvas.height);       // clear canvas
+  ctx.fillStyle = "#181828";                             // dark bg
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate((rotDeg - 90) * Math.PI / 180);
+
+  for(let i = 0; i < N; i++){
+    const slice = 2*Math.PI / N;
+    const angle = i * slice;
+
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.arc(0,0,radius,angle, angle+slice);
+    ctx.closePath();
+    ctx.fillStyle = colors[i];
+    ctx.fill();
+    ctx.strokeStyle = "#111";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // labels
+    ctx.save();
+    ctx.rotate(angle + slice/2);
+    ctx.translate(radius*0.7,0);
+    ctx.rotate(Math.PI/2);
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 14px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(outcomes[i],0,0);
+    ctx.restore();
+  }
+
+  ctx.restore();
+}
+
+// initial draw
+drawWheel(rotationDeg);
+
 
 /* -------- DOM -------- */
 const canvas = document.getElementById('wheel');
@@ -199,60 +252,6 @@ const sliceDeg = 360/N;
 const RAD = Math.PI/180;
 let rotationDeg = 0;
 let spinning = false;
-
-/* ---------------- WHEEL DRAWING ---------------- */
-const canvas = document.getElementById('wheel');
-const ctx = canvas.getContext('2d');
-const cx = canvas.width / 2;
-const cy = canvas.height / 2;
-const radius = canvas.width / 2 - 10;
-const N = outcomes.length;
-const sliceDeg = 360 / N;
-let rotationDeg = 0;
-
-function drawWheel(rotDeg){
-  // Fill background so slices are visible
-  ctx.fillStyle = "#181828"; // dark background
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.rotate((rotDeg - 90) * Math.PI / 180);
-
-  const slice = (2 * Math.PI) / N;
-
-  for(let i = 0; i < N; i++){
-    const angle = i * slice;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.arc(0, 0, radius, angle, angle + slice);
-    ctx.closePath();
-
-    ctx.fillStyle = colors[i];
-    ctx.fill();
-    ctx.strokeStyle = "#111";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // draw slice labels
-    ctx.save();
-    ctx.rotate(angle + slice/2);
-    ctx.translate(radius*0.90, 0);
-    ctx.rotate(Math.PI/2);
-    ctx.fillStyle = "white";
-    ctx.font = "bold 14px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(outcomes[i], 0, 0);
-    ctx.restore();
-  }
-
-  ctx.restore();
-}
-
-// initial draw
-drawWheel(rotationDeg);
-
 
 function updateUserInfoDisplay(){
   if(!username){ coinInfo.textContent="Not logged in"; coinInfo.style.color="white"; return; }
