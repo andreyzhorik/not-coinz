@@ -329,31 +329,33 @@ spinBtn.addEventListener('click', async ()=>{
     const duration = 4200;
     const t0 = performance.now();
 
-    function step(t){
-        const elapsed = t - t0;
-        const p = Math.min(elapsed/duration,1);
-        const ease = 1 - Math.pow(1-p,3);
-        rotationDeg = start + (targetRotation-start)*ease;
-        drawWheel(rotationDeg);
+   function step(t){
+    const elapsed = t - t0;
+    const p = Math.min(elapsed/duration,1);
+    const ease = 1 - Math.pow(1-p,3);
+    rotationDeg = start + (targetRotation-start)*ease;
+    drawWheel(rotationDeg);
 
-        if(p<1) requestAnimationFrame(step);
-        else{
-            rotationDeg = baseRotationDeg + 360*Math.floor(rotationDeg/360);
-            let win = 0;
-            if(result!=="Lose"){
-                const mult = parseFloat(result.replace("x",""));
-                if(!Number.isNaN(mult)) win = Math.floor(bet*mult);
-                alert(`🎉 You won ${win} coins! (${result})`);
-            } else alert("😢 You lost your bet!");
+    if(p<1) requestAnimationFrame(step);
+    else{
+        rotationDeg = baseRotationDeg + 360*Math.floor(rotationDeg/360);
+        let win = 0;
+        if(result!=="Lose"){
+            const mult = parseFloat(result.replace("x",""));
+            if(!Number.isNaN(mult)) win = Math.floor(bet*mult);
+            alert(`🎉 You won ${win} coins! (${result})`);
+        } else alert("😢 You lost your bet!");
 
-            coins = Math.max(0, coins + win);
-            if(coins===0) coins = 100;
+        coins = Math.max(0, coins + win);
+        if(coins===0) coins = 100;
 
-            await saveCurrentToServer(); // Save immediately
-            updateUserInfoDisplay();
-            spinning = false;
-        }
+        // Save coins asynchronously without breaking animation
+        saveCurrentToServer();
+
+        updateUserInfoDisplay();
+        spinning = false;
     }
+}
     requestAnimationFrame(step);
 });
 
