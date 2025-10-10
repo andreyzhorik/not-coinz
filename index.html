@@ -156,23 +156,7 @@
 </div>
 
 <script>
-/* ---------------- CONFIG ---------------- */
-const outcomes = [
-  "1.5x","0.5x","0.5x","1.1x","1.8x","10x","1.9x","Lose","Lose","1.7x",
-  "Lose","1x","Lose","1x","Lose","Lose","1.4x","Lose","Lose","1.2x",
-  "Lose","Lose","2.0x","5.0x","2.5x","1.3x","Lose","1.6x","0.5x","Lose",
-  "2.5x","Lose","0.75x","Lose","2.0x","Lose"
-];
-
-// slice colors: red for Lose/0.5x/0.75x, green for 5x/10x, blue for rest
-const colors = outcomes.map(o => {
-  if(o === "Lose" || o === "0.5x" || o === "0.75x") return "#e74c3c"; // red
-  if(o === "5.0x" || o === "10x") return "#2ecc71"; // green
-  return "#3498db"; // blue
-});
-
-
-/* -------- DOM -------- */
+/* ---------------- CONFIG & DOM ---------------- */
 const canvas = document.getElementById('wheel');
 const ctx = canvas.getContext('2d');
 const spinBtn = document.getElementById('spin');
@@ -180,351 +164,207 @@ const setUsernameBtn = document.getElementById('setUsername');
 const usernameInput = document.getElementById('username');
 const coinInfo = document.getElementById('userinfo');
 const betInput = document.getElementById('bet');
-const adminPass = document.getElementById('adminPass');
-const adminBtn = document.getElementById('adminBtn');
-const adminControls = document.getElementById('adminControls');
-const adminCoinsInput = document.getElementById('adminCoins');
-const setCoinsBtn = document.getElementById('setCoinsBtn');
-const adminRankSelect = document.getElementById('adminRank');
-const setRankBtn = document.getElementById('setRankBtn');
-const resetLeaderboardBtn = document.getElementById('resetLeaderboardBtn');
-const hideAdminBtn = document.getElementById('hideAdminBtn');
-const resetUserCoinsBtn = document.getElementById('resetUserCoinsBtn');
+
+const outcomes = [
+  "1.5x","0.5x","0.5x","1.1x","1.8x","10x","1.9x","Lose","Lose","1.7x",
+  "Lose","1x","Lose","1x","Lose","Lose","1.4x","Lose","Lose","1.2x",
+  "Lose","Lose","2.0x","5.0x","2.5x","1.3x","Lose","1.6x","0.5x","Lose",
+  "2.5x","Lose","0.75x","Lose","2.0x","Lose"
+];
+const colors = outcomes.map(o => {
+    if(o==="Lose"||o==="0.5x"||o==="0.75x") return "#e74c3c";
+    if(o==="5.0x"||o==="10x") return "#2ecc71";
+    return "#3498db";
+});
+
+const N = outcomes.length;
+const sliceDeg = 360 / N;
+const RAD = Math.PI/180;
+let rotationDeg = 0;
+let spinning = false;
 
 /* -------- STATE -------- */
 let username = "";
 let coins = 100;
 let rank = "None";
-const N = outcomes.length;
-const sliceDeg = 360/N;
-const RAD = Math.PI/180;
-let rotationDeg = 0;
-let spinning = false;
+const API_URL = "https://68e839b2f2707e6128ca35e1.mockapi.io/players";
 
-/* -------- FUNCTIONS -------- */
+/* ---------------- FUNCTIONS ---------------- */
 function drawWheel(rotDeg){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.save();
-  const cx = canvas.width/2, cy = canvas.height/2;
-  const radius = canvas.width/2 - 10;
-  ctx.translate(cx,cy);
-  ctx.rotate((rotDeg-90)*RAD);
-  const slice = 2*Math.PI/N;
-  for(let i=0;i<N;i++){
-    const angle = i*slice;
-    ctx.beginPath();
-    ctx.moveTo(0,0);
-    ctx.arc(0,0,radius,angle,angle+slice);
-    ctx.closePath();
-    ctx.fillStyle = colors[i];
-    ctx.fill();
-    ctx.strokeStyle="#111"; ctx.lineWidth=2; ctx.stroke();
+    ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.save();
-    ctx.rotate(angle+slice/2);
-    ctx.translate(radius*0.9,0);
-    ctx.rotate(Math.PI/2);
-    ctx.fillStyle="white";
-    ctx.font="bold 14px Arial";
-    ctx.textAlign="center"; ctx.textBaseline="middle";
-    ctx.fillText(outcomes[i],0,0);
+    const cx = canvas.width/2, cy = canvas.height/2;
+    const radius = canvas.width/2 - 10;
+    ctx.translate(cx,cy);
+    ctx.rotate((rotDeg-90)*RAD);
+    const slice = 2*Math.PI/N;
+    for(let i=0;i<N;i++){
+        const angle=i*slice;
+        ctx.beginPath();
+        ctx.moveTo(0,0);
+        ctx.arc(0,0,radius,angle,angle+slice);
+        ctx.closePath();
+        ctx.fillStyle=colors[i];
+        ctx.fill();
+        ctx.strokeStyle="#111"; ctx.lineWidth=2; ctx.stroke();
+        ctx.save();
+        ctx.rotate(angle+slice/2);
+        ctx.translate(radius*0.7,0);
+        ctx.rotate(Math.PI/2);
+        ctx.fillStyle="white";
+        ctx.font="bold 14px Arial";
+        ctx.textAlign="center"; ctx.textBaseline="middle";
+        ctx.fillText(outcomes[i],0,0);
+        ctx.restore();
+    }
     ctx.restore();
-  }
-  ctx.restore();
 }
 drawWheel(rotationDeg);
 
 function updateUserInfoDisplay(){
-  if(!username){ coinInfo.textContent="Not logged in"; coinInfo.style.color="white"; return; }
-  coinInfo.textContent=`${username}: ${coins} | ${rank}`;
-  if(rank==="VIP") coinInfo.style.color="var(--yellow)";
-  else if(rank==="VIP+") coinInfo.style.color="var(--yellow)";
-  else if(rank==="VIP++") coinInfo.style.color="var(--purple)";
-  else coinInfo.style.color="white";
+    if(!username){ coinInfo.textContent="Not logged in"; coinInfo.style.color="white"; return; }
+    coinInfo.textContent = `${username}: ${coins} | ${rank}`;
+    if(rank==="VIP"||rank==="VIP+") coinInfo.style.color="var(--yellow)";
+    else if(rank==="VIP++") coinInfo.style.color="var(--purple)";
+    else coinInfo.style.color="white";
 }
 
-/* -------- USER -------- */
-async function getUserFromServer(name) {
+/* -------- SERVER FUNCTIONS -------- */
+async function fetchLeaderboard() {
     try {
-        const list = await fetchLeaderboard();
-        return list.find(p => p.name === name);
-    } catch (e) {
-        console.error("Error fetching user:", e);
-        return null;
-    }
+        const res = await fetch(API_URL);
+        return await res.json();
+    } catch(e) { console.error("Fetch error:", e); return []; }
 }
 
-setUsernameBtn.addEventListener('click', async () => {
+async function updatePlayerServer(player) {
+    try {
+        const board = await fetchLeaderboard();
+        const existing = board.find(p=>p.name===player.name);
+        if(existing){
+            await fetch(`${API_URL}/${existing.id}`, {
+                method:"PUT",
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify(player)
+            });
+        } else {
+            await fetch(API_URL,{
+                method:"POST",
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify(player)
+            });
+        }
+    } catch(e){ console.error("Update error:", e); }
+}
+
+async function saveCurrentToServer(){
+    if(!username) return;
+    await updatePlayerServer({name:username, coins, rank});
+    await renderLeaderboard();
+}
+
+async function getUserFromServer(name){
+    const list = await fetchLeaderboard();
+    return list.find(p=>p.name===name);
+}
+
+async function renderLeaderboard(){
+    const ul = document.getElementById('leaderboardList');
+    ul.innerHTML="";
+    const list = await fetchLeaderboard();
+    list.sort((a,b)=>b.coins-a.coins);
+    list.slice(0,20).forEach((p,i)=>{
+        const li=document.createElement('li');
+        let color="white";
+        if(p.rank==="VIP"||p.rank==="VIP+") color="var(--yellow)";
+        else if(p.rank==="VIP++") color="var(--purple)";
+        li.style.color=color;
+        li.textContent = `${i+1}. ${p.name}: ${p.coins} | ${p.rank || "None"}`;
+        ul.appendChild(li);
+    });
+}
+
+/* -------- USER LOGIN -------- */
+setUsernameBtn.addEventListener('click', async ()=>{
     const val = usernameInput.value.trim();
-    if (!val) { alert("Enter a username"); return; }
+    if(!val){ alert("Enter a username"); return; }
     username = val;
     usernameInput.disabled = true;
     setUsernameBtn.disabled = true;
 
-    // Fetch from server
-    const userFromServer = await getUserFromServer(username);
-    if (userFromServer) {
-        coins = userFromServer.coins;
-        rank = userFromServer.rank || "None";
+    const user = await getUserFromServer(username);
+    if(user){
+        coins = user.coins;
+        rank = user.rank || "None";
     } else {
         coins = 100;
         rank = "None";
-        await saveCurrentToServer(); // Create new user
+        await saveCurrentToServer();
     }
-
     updateUserInfoDisplay();
     renderLeaderboard();
 });
 
-
-/* -------- SPIN -------- */
-spinBtn.addEventListener('click',()=>{
-  if(!username){ alert("Set username first"); return; }
-  if(spinning) return;
-  let bet=Math.floor(Number(betInput.value)||0);
-  if(!bet||bet<=0){ alert("Enter valid bet"); return; }
-  if(bet>coins){ alert("Not enough coins"); return; }
-  coins = Math.max(0, coins-bet);
-  updateUserInfoDisplay();
-  spinning=true;
-  const idx = Math.floor(Math.random()*N);
-  const result=outcomes[idx];
-  const currentNorm=((rotationDeg%360)+360)%360;
-  const sliceCenterDeg=idx*sliceDeg+sliceDeg/2;
-  const baseRotationDeg=(360-sliceCenterDeg)%360;
-  const delta=(baseRotationDeg-currentNorm+360)%360;
-  const fullSpins=6+Math.floor(Math.random()*5);
-  const targetRotation=rotationDeg+fullSpins*360+delta;
-  const start=rotationDeg;
-  const duration=4200;
-  const t0=performance.now();
-
-  function step(t){
-    const elapsed=t-t0;
-    const p=Math.min(elapsed/duration,1);
-    const ease=1-Math.pow(1-p,3);
-    rotationDeg=start+(targetRotation-start)*ease;
-    drawWheel(rotationDeg);
-    if(p<1) requestAnimationFrame(step);
-    else {
-      rotationDeg=baseRotationDeg+360*Math.floor(rotationDeg/360);
-      let win=0;
-      if(result!=="Lose"){
-        const mult=parseFloat(result.replace("x",""));
-        if(!Number.isNaN(mult)) win=Math.floor(bet*mult);
-        alert(`🎉 You won ${win} coins! (${result})`);
-      } else alert("😢 You lost your bet!");
-      coins=Math.max(0, coins+win);
-      if(coins===0) coins=100; // reset at 0
-      updateUserInfoDisplay();
-      spinning=false;
-    }
-  }
-  requestAnimationFrame(step);
-});
-
-/* -------- LEADERBOARD -------- */
-function renderLeaderboard(){
-  const ul=document.getElementById('leaderboardList');
-  ul.innerHTML="";
-  // placeholder for server leaderboard, later second part
-}
-  /* -------- SERVER CONFIG -------- */
-const API_URL = "https://68e839b2f2707e6128ca35e1.mockapi.io/players";
-
-/* -------- SERVER FUNCTIONS -------- */
-async function fetchLeaderboard() {
-  try {
-    const res = await fetch(API_URL);
-    const data = await res.json();
-    return data; // array of {id, name, coins, rank}
-  } catch(e) { console.error("Fetch error:", e); return []; }
-}
-
-async function updatePlayerServer(player) {
-  try {
-    // check if exists
-    const board = await fetchLeaderboard();
-    const existing = board.find(p => p.name === player.name);
-    if(existing) {
-      // update existing
-      await fetch(`${API_URL}/${existing.id}`, {
-        method: "PUT",
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(player)
-      });
-    } else {
-      // create new
-      await fetch(API_URL, {
-        method: "POST",
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(player)
-      });
-    }
-  } catch(e){ console.error("Update error:", e); }
-}
-
-async function renderLeaderboard() {
-  const ul = document.getElementById('leaderboardList');
-  ul.innerHTML = "";
-  let list = await fetchLeaderboard();
-  // sort descending coins
-  list.sort((a,b)=>b.coins - a.coins);
-  list.slice(0,20).forEach((p,i)=>{
-    const li=document.createElement('li');
-    // rank color
-    let color="white";
-    if(p.rank==="VIP" || p.rank==="VIP+") color="var(--yellow)";
-    else if(p.rank==="VIP++") color="var(--purple)";
-    li.style.color=color;
-    li.textContent=`${i+1}. ${p.name}: ${p.coins} | ${p.rank || "None"}`;
-    ul.appendChild(li);
-  });
-}
-
-/* -------- SAVE CURRENT USER TO SERVER -------- */
-async function saveCurrentToServer() {
-  if(!username) return;
-  const player = { name: username, coins, rank };
-  await updatePlayerServer(player);
-  await renderLeaderboard();
-}
-
-/* -------- UPDATE USER INFO & SERVER -------- */
-function updateUserAndServer(){
-  updateUserInfoDisplay();
-  saveCurrentToServer();
-}
-
-/* -------- OVERRIDE PREVIOUS SAVE FUNCTION -------- */
-setUsernameBtn.addEventListener('click', async ()=>{
-  const val=usernameInput.value.trim();
-  if(!val){ alert("Enter a username"); return; }
-  username=val;
-  usernameInput.disabled=true; setUsernameBtn.disabled=true;
-  coins=100; rank="None";
-  updateUserInfoDisplay();
-  await saveCurrentToServer();
-});
-
 /* -------- SPIN OVERRIDE -------- */
-spinBtn.addEventListener('click', async () => {
-    if(!username){ 
-        alert("Set username first"); 
-        return; 
-    }
+spinBtn.addEventListener('click', async ()=>{
+    if(!username){ alert("Set username first"); return; }
     if(spinning) return;
+    let bet = Math.floor(Number(betInput.value)||0);
+    if(!bet||bet<=0){ alert("Enter valid bet"); return; }
+    if(bet>coins){ alert("Not enough coins"); return; }
 
-    let bet = Math.floor(Number(betInput.value) || 0);
-    if(!bet || bet <= 0){ 
-        alert("Enter a valid bet"); 
-        return; 
-    }
-    if(bet > coins){ 
-        alert("Not enough coins"); 
-        return; 
-    }
-
-    coins = Math.max(0, coins - bet);
+    coins = Math.max(0, coins-bet);
     updateUserInfoDisplay();
     spinning = true;
 
-    const idx = Math.floor(Math.random() * N);
+    const idx = Math.floor(Math.random()*N);
     const result = outcomes[idx];
-    const currentNorm = ((rotationDeg % 360) + 360) % 360;
-    const sliceCenterDeg = idx * sliceDeg + sliceDeg / 2;
+    const currentNorm = ((rotationDeg%360)+360)%360;
+    const sliceCenterDeg = idx*sliceDeg + sliceDeg/2;
     const baseRotationDeg = (360 - sliceCenterDeg) % 360;
     const delta = (baseRotationDeg - currentNorm + 360) % 360;
-    const fullSpins = 6 + Math.floor(Math.random() * 5);
-    const targetRotation = rotationDeg + fullSpins * 360 + delta;
+    const fullSpins = 6 + Math.floor(Math.random()*5);
+    const targetRotation = rotationDeg + fullSpins*360 + delta;
     const start = rotationDeg;
     const duration = 4200;
     const t0 = performance.now();
 
     function step(t){
         const elapsed = t - t0;
-        const p = Math.min(elapsed / duration, 1);
-        const ease = 1 - Math.pow(1 - p, 3);
-        rotationDeg = start + (targetRotation - start) * ease;
+        const p = Math.min(elapsed/duration,1);
+        const ease = 1 - Math.pow(1-p,3);
+        rotationDeg = start + (targetRotation-start)*ease;
         drawWheel(rotationDeg);
 
-        if(p < 1) requestAnimationFrame(step);
-        else {
-            rotationDeg = baseRotationDeg + 360 * Math.floor(rotationDeg / 360);
+        if(p<1) requestAnimationFrame(step);
+        else{
+            rotationDeg = baseRotationDeg + 360*Math.floor(rotationDeg/360);
             let win = 0;
-
-            if(result !== "Lose"){
+            if(result!=="Lose"){
                 const mult = parseFloat(result.replace("x",""));
-                if(!Number.isNaN(mult)) win = Math.floor(bet * mult);
+                if(!Number.isNaN(mult)) win = Math.floor(bet*mult);
                 alert(`🎉 You won ${win} coins! (${result})`);
             } else alert("😢 You lost your bet!");
 
             coins = Math.max(0, coins + win);
-            if(coins === 0) coins = 100; // optional reset at 0
+            if(coins===0) coins = 100;
 
-            // <-- Save coins to server immediately
-            updateUserAndServer();
-
+            await saveCurrentToServer(); // Save immediately
+            updateUserInfoDisplay();
             spinning = false;
         }
     }
-
     requestAnimationFrame(step);
 });
 
-/* -------- ADMIN PANEL -------- */
-adminBtn.addEventListener('click', ()=>{
-  if(adminPass.value==="ghd87"){
-    adminControls.style.display='flex';
-    adminPass.value='';
-    adminCoinsInput.value=coins;
-    adminRankSelect.value=rank;
-  } else alert("Incorrect password");
-});
-
-setCoinsBtn.addEventListener('click', ()=>{
-  const v=Math.max(0, Math.floor(Number(adminCoinsInput.value)||0));
-  coins=v;
-  updateUserAndServer();
-  alert("Coins set to "+coins);
-});
-
-setRankBtn.addEventListener('click', ()=>{
-  const r=adminRankSelect.value || "None";
-  rank=r;
-  updateUserAndServer();
-  alert("Rank set to "+rank);
-});
-
-resetUserCoinsBtn.addEventListener('click', ()=>{
-  if(!username) return;
-  if(confirm("Reset current user's coins to 100?")){
-    coins=100;
-    updateUserAndServer();
-  }
-});
-
-resetLeaderboardBtn.addEventListener('click', async ()=>{
-  if(confirm("Reset leaderboard?")){
-    // Delete all users from server (MockAPI allows DELETE)
-    const list=await fetchLeaderboard();
-    for(const p of list){
-      await fetch(`${API_URL}/${p.id}`,{method:"DELETE"});
-    }
-    await renderLeaderboard();
-    alert("Leaderboard cleared");
-  }
-});
-
-hideAdminBtn.addEventListener('click', ()=>{ adminControls.style.display='none'; });
+/* -------- AUTO-SAVE EVERY 5 SECONDS -------- */
+setInterval(()=>{
+    if(username) saveCurrentToServer();
+}, 5000);
 
 /* -------- INIT -------- */
 renderLeaderboard();
 updateUserInfoDisplay();
- 
-  // Auto-save every 5 seconds
-setInterval(() => {
-    if(username) saveCurrentToServer();
-}, 5000);
 
 </script>
 </body>
