@@ -203,30 +203,39 @@ let spinning = false;
 function drawWheel(rotDeg){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   ctx.save();
-  const cx = canvas.width/2, cy = canvas.height/2;
-  const radius = canvas.width/2 - 10;
-  ctx.translate(cx,cy);
-  ctx.rotate((rotDeg-90)*RAD);
-  const slice = 2*Math.PI/N;
-  for(let i=0;i<N;i++){
-    const angle = i*slice;
+  ctx.translate(cx, cy);
+  ctx.rotate((rotDeg - 90) * Math.PI / 180);
+
+  const slice = (2 * Math.PI) / outcomes.length;
+
+  for(let i=0; i<outcomes.length; i++){
+    const angle = i * slice;
     ctx.beginPath();
     ctx.moveTo(0,0);
-    ctx.arc(0,0,radius,angle,angle+slice);
+    ctx.arc(0,0,radius, angle, angle+slice);
     ctx.closePath();
+
+    // fill slice with color from config
     ctx.fillStyle = colors[i];
     ctx.fill();
-    ctx.strokeStyle="#111"; ctx.lineWidth=2; ctx.stroke();
+
+    ctx.strokeStyle = "#111";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // draw labels
     ctx.save();
-    ctx.rotate(angle+slice/2);
-    ctx.translate(radius*0.7,0);
+    ctx.rotate(angle + slice/2);
+    ctx.translate(radius*0.90,0);
     ctx.rotate(Math.PI/2);
-    ctx.fillStyle="white";
-    ctx.font="bold 14px Arial";
-    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillStyle = "white";
+    ctx.font = "bold 14px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
     ctx.fillText(outcomes[i],0,0);
     ctx.restore();
   }
+
   ctx.restore();
 }
 drawWheel(rotationDeg);
