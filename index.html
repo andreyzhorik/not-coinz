@@ -203,27 +203,29 @@ let spinning = false;
 /* ---------------- WHEEL DRAWING ---------------- */
 const canvas = document.getElementById('wheel');
 const ctx = canvas.getContext('2d');
-const cx = canvas.width/2;
-const cy = canvas.height/2;
-const radius = canvas.width/2 - 10;
+const cx = canvas.width / 2;
+const cy = canvas.height / 2;
+const radius = canvas.width / 2 - 10;
+const N = outcomes.length;
+const sliceDeg = 360 / N;
 let rotationDeg = 0;
 
 function drawWheel(rotDeg){
-  // Set canvas background so wheel is visible
-  ctx.fillStyle = "#181828";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+  // Fill background so slices are visible
+  ctx.fillStyle = "#181828"; // dark background
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   ctx.save();
   ctx.translate(cx, cy);
   ctx.rotate((rotDeg - 90) * Math.PI / 180);
 
-  const slice = (2 * Math.PI) / outcomes.length;
+  const slice = (2 * Math.PI) / N;
 
-  for(let i=0; i<outcomes.length; i++){
+  for(let i = 0; i < N; i++){
     const angle = i * slice;
     ctx.beginPath();
-    ctx.moveTo(0,0);
-    ctx.arc(0,0,radius, angle, angle+slice);
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, radius, angle, angle + slice);
     ctx.closePath();
 
     ctx.fillStyle = colors[i];
@@ -235,13 +237,13 @@ function drawWheel(rotDeg){
     // draw slice labels
     ctx.save();
     ctx.rotate(angle + slice/2);
-    ctx.translate(radius*0.72,0);
+    ctx.translate(radius*0.90, 0);
     ctx.rotate(Math.PI/2);
     ctx.fillStyle = "white";
     ctx.font = "bold 14px Arial";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(outcomes[i],0,0);
+    ctx.fillText(outcomes[i], 0, 0);
     ctx.restore();
   }
 
