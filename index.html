@@ -156,7 +156,7 @@
 </div>
 
 <script>
- /* -------- CONFIG -------- */
+/* ---------------- CONFIG ---------------- */
 const outcomes = [
   "1.5x","0.5x","0.5x","1.1x","1.8x","10x","1.9x","Lose","Lose","1.7x",
   "Lose","1x","Lose","1x","Lose","Lose","1.4x","Lose","Lose","1.2x",
@@ -164,10 +164,11 @@ const outcomes = [
   "2.5x","Lose","0.75x","Lose","2.0x","Lose"
 ];
 
-const colors = outcomes.map(o=>{
-  if(o === "Lose" || o==="0.5x" || o==="0.75x") return "var(--red)";
-  if(o==="5.0x" || o==="10x") return "var(--green)";
-  return "var(--blue)";
+// slice colors: red for Lose/0.5x/0.75x, green for 5x/10x, blue for rest
+const colors = outcomes.map(o => {
+  if(o === "Lose" || o === "0.5x" || o === "0.75x") return "#e74c3c"; // red
+  if(o === "5.0x" || o === "10x") return "#2ecc71"; // green
+  return "#3498db"; // blue
 });
 
 /* -------- DOM -------- */
