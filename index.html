@@ -164,13 +164,11 @@ const outcomes = [
   "2.5x","Lose","0.75x","Lose","2.0x","Lose"
 ];
 
-// slice colors: red for Lose/0.5x/0.75x, green for 5x/10x, blue for rest
 const colors = outcomes.map(o => {
-  if(o === "Lose" || o === "0.5x" || o === "0.75x") return "#e74c3c"; // red
-  if(o === "5.0x" || o === "10x") return "#2ecc71"; // green
-  return "#3498db"; // blue
+  if(o === "Lose" || o === "0.5x" || o === "0.75x") return "#e74c3c";       // red
+  if(o === "5.0x" || o === "10x") return "#2ecc71";                          // green
+  return "#3498db";                                                           // blue for others
 });
-
 
 /* -------- DOM -------- */
 const canvas = document.getElementById('wheel');
