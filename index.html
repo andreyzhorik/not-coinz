@@ -243,15 +243,38 @@ function updateUserInfoDisplay(){
 }
 
 /* -------- USER -------- */
-setUsernameBtn.addEventListener('click',()=>{
-  const val=usernameInput.value.trim();
-  if(!val){ alert("Enter username"); return; }
-  username=val;
-  usernameInput.disabled=true; setUsernameBtn.disabled=true;
-  coins=100; rank="None";
-  updateUserInfoDisplay();
-  renderLeaderboard(); // first render
+async function getUserFromServer(name) {
+    try {
+        const list = await fetchLeaderboard();
+        return list.find(p => p.name === name);
+    } catch (e) {
+        console.error("Error fetching user:", e);
+        return null;
+    }
+}
+
+setUsernameBtn.addEventListener('click', async () => {
+    const val = usernameInput.value.trim();
+    if (!val) { alert("Enter a username"); return; }
+    username = val;
+    usernameInput.disabled = true;
+    setUsernameBtn.disabled = true;
+
+    // Fetch from server
+    const userFromServer = await getUserFromServer(username);
+    if (userFromServer) {
+        coins = userFromServer.coins;
+        rank = userFromServer.rank || "None";
+    } else {
+        coins = 100;
+        rank = "None";
+        await saveCurrentToServer(); // Create new user
+    }
+
+    updateUserInfoDisplay();
+    renderLeaderboard();
 });
+
 
 /* -------- SPIN -------- */
 spinBtn.addEventListener('click',()=>{
