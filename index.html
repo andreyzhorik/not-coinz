@@ -407,49 +407,68 @@ setUsernameBtn.addEventListener('click', async ()=>{
 });
 
 /* -------- SPIN OVERRIDE -------- */
-spinBtn.addEventListener('click', async ()=>{
-  if(!username){ alert("Set username first"); return; }
-  if(spinning) return;
-  let bet=Math.floor(Number(betInput.value)||0);
-  if(!bet||bet<=0){ alert("Enter valid bet"); return; }
-  if(bet>coins){ alert("Not enough coins"); return; }
-  coins=Math.max(0, coins-bet);
-  updateUserInfoDisplay();
-  spinning=true;
-  const idx=Math.floor(Math.random()*N);
-  const result=outcomes[idx];
-  const currentNorm=((rotationDeg%360)+360)%360;
-  const sliceCenterDeg=idx*sliceDeg+sliceDeg/2;
-  const baseRotationDeg=(360-sliceCenterDeg)%360;
-  const delta=(baseRotationDeg-currentNorm+360)%360;
-  const fullSpins=6+Math.floor(Math.random()*5);
-  const targetRotation=rotationDeg+fullSpins*360+delta;
-  const start=rotationDeg;
-  const duration=4200;
-  const t0=performance.now();
-
-  function step(t){
-    const elapsed=t-t0;
-    const p=Math.min(elapsed/duration,1);
-    const ease=1-Math.pow(1-p,3);
-    rotationDeg=start+(targetRotation-start)*ease;
-    drawWheel(rotationDeg);
-    if(p<1) requestAnimationFrame(step);
-    else {
-      rotationDeg=baseRotationDeg+360*Math.floor(rotationDeg/360);
-      let win=0;
-      if(result!=="Lose"){
-        const mult=parseFloat(result.replace("x",""));
-        if(!Number.isNaN(mult)) win=Math.floor(bet*mult);
-        alert(`🎉 You won ${win} coins! (${result})`);
-      } else alert("😢 You lost your bet!");
-      coins=Math.max(0, coins+win);
-      if(coins===0) coins=100;
-      updateUserAndServer();
-      spinning=false;
+spinBtn.addEventListener('click', async () => {
+    if(!username){ 
+        alert("Set username first"); 
+        return; 
     }
-  }
-  requestAnimationFrame(step);
+    if(spinning) return;
+
+    let bet = Math.floor(Number(betInput.value) || 0);
+    if(!bet || bet <= 0){ 
+        alert("Enter a valid bet"); 
+        return; 
+    }
+    if(bet > coins){ 
+        alert("Not enough coins"); 
+        return; 
+    }
+
+    coins = Math.max(0, coins - bet);
+    updateUserInfoDisplay();
+    spinning = true;
+
+    const idx = Math.floor(Math.random() * N);
+    const result = outcomes[idx];
+    const currentNorm = ((rotationDeg % 360) + 360) % 360;
+    const sliceCenterDeg = idx * sliceDeg + sliceDeg / 2;
+    const baseRotationDeg = (360 - sliceCenterDeg) % 360;
+    const delta = (baseRotationDeg - currentNorm + 360) % 360;
+    const fullSpins = 6 + Math.floor(Math.random() * 5);
+    const targetRotation = rotationDeg + fullSpins * 360 + delta;
+    const start = rotationDeg;
+    const duration = 4200;
+    const t0 = performance.now();
+
+    function step(t){
+        const elapsed = t - t0;
+        const p = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - p, 3);
+        rotationDeg = start + (targetRotation - start) * ease;
+        drawWheel(rotationDeg);
+
+        if(p < 1) requestAnimationFrame(step);
+        else {
+            rotationDeg = baseRotationDeg + 360 * Math.floor(rotationDeg / 360);
+            let win = 0;
+
+            if(result !== "Lose"){
+                const mult = parseFloat(result.replace("x",""));
+                if(!Number.isNaN(mult)) win = Math.floor(bet * mult);
+                alert(`🎉 You won ${win} coins! (${result})`);
+            } else alert("😢 You lost your bet!");
+
+            coins = Math.max(0, coins + win);
+            if(coins === 0) coins = 100; // optional reset at 0
+
+            // <-- Save coins to server immediately
+            updateUserAndServer();
+
+            spinning = false;
+        }
+    }
+
+    requestAnimationFrame(step);
 });
 
 /* -------- ADMIN PANEL -------- */
