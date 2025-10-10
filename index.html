@@ -164,11 +164,12 @@ const outcomes = [
   "2.5x","Lose","0.75x","Lose","2.0x","Lose"
 ];
 
-const colors = outcomes.map(o => {
-  if(o === "Lose" || o === "0.5x" || o === "0.75x") return "#e74c3c";       // red
-  if(o === "5.0x" || o === "10x") return "#2ecc71";                          // green
-  return "#3498db";                                                           // blue for others
-});
+const colors = [
+  "#2ecc71","#e74c3c","#e74c3c","#3498db","#3498db","#27ae60","#3498db","#e74c3c","#e74c3c","#3498db",
+  "#e74c3c","#3498db","#e74c3c","#3498db","#e74c3c","#e74c3c","#f1c40f","#e74c3c","#e74c3c","#3498db",
+  "#e74c3c","#e74c3c","#2ecc71","#27ae60","#2ecc71","#3498db","#e74c3c","#3498db","#e74c3c","#e74c3c",
+  "#2ecc71","#e74c3c","#e74c3c","#e74c3c","#2ecc71","#e74c3c"
+];
 
 /* -------- DOM -------- */
 const canvas = document.getElementById('wheel');
@@ -199,9 +200,19 @@ const RAD = Math.PI/180;
 let rotationDeg = 0;
 let spinning = false;
 
-/* -------- FUNCTIONS -------- */
+/* ---------------- WHEEL DRAWING ---------------- */
+const canvas = document.getElementById('wheel');
+const ctx = canvas.getContext('2d');
+const cx = canvas.width/2;
+const cy = canvas.height/2;
+const radius = canvas.width/2 - 10;
+let rotationDeg = 0;
+
 function drawWheel(rotDeg){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+  // Set canvas background so wheel is visible
+  ctx.fillStyle = "#181828";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
   ctx.save();
   ctx.translate(cx, cy);
   ctx.rotate((rotDeg - 90) * Math.PI / 180);
@@ -215,18 +226,16 @@ function drawWheel(rotDeg){
     ctx.arc(0,0,radius, angle, angle+slice);
     ctx.closePath();
 
-    // fill slice with color from config
     ctx.fillStyle = colors[i];
     ctx.fill();
-
     ctx.strokeStyle = "#111";
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // draw labels
+    // draw slice labels
     ctx.save();
     ctx.rotate(angle + slice/2);
-    ctx.translate(radius*0.90,0);
+    ctx.translate(radius*0.72,0);
     ctx.rotate(Math.PI/2);
     ctx.fillStyle = "white";
     ctx.font = "bold 14px Arial";
@@ -238,7 +247,10 @@ function drawWheel(rotDeg){
 
   ctx.restore();
 }
+
+// initial draw
 drawWheel(rotationDeg);
+
 
 function updateUserInfoDisplay(){
   if(!username){ coinInfo.textContent="Not logged in"; coinInfo.style.color="white"; return; }
