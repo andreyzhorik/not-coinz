@@ -234,7 +234,7 @@ function drawWheel(rotDeg){
 function updateUserInfoDisplay(){
     if(!username){ coinInfo.textContent="Not logged in"; coinInfo.style.color="white"; return; }
     coinInfo.textContent = `${username}: ${coins} | ${rank}`;
-    if(rank==="VIP"||rank==="VIP+") coinInfo.style.color="var(--yellow)";
+    if(rank==="VIP"||rank==="VIP+"||rank==="RICH💸") coinInfo.style.color="var(--yellow)";
     else if(rank==="VIP++") coinInfo.style.color="var(--purple)";
     else coinInfo.style.color="white";
 }
