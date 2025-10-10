@@ -246,18 +246,20 @@ async function fetchLeaderboard(){
     } catch(e){ console.error(e); return []; }
 }
 
+// ✅ Update player on server, avoid duplicates
 async function updatePlayerServer(player){
     try{
         const list = await fetchLeaderboard();
-        const existing = list.find(p=>p.name===player.name);
+        const existing = list.find(p => p.name === player.name);
+
         if(existing){
-            await fetch(`${API_URL}/${existing.id}`,{
+            await fetch(`${API_URL}/${existing.id}`, {
                 method:"PUT",
                 headers:{'Content-Type':'application/json'},
                 body:JSON.stringify(player)
             });
         } else {
-            await fetch(API_URL,{
+            await fetch(API_URL, {
                 method:"POST",
                 headers:{'Content-Type':'application/json'},
                 body:JSON.stringify(player)
@@ -358,7 +360,7 @@ spinBtn.addEventListener('click', ()=>{
             coins += win;
             if(coins<=0) coins = 100;
 
-            saveCurrentToServer(); // save immediately
+            saveCurrentToServer();
             updateUserInfoDisplay();
             spinning = false;
         }
