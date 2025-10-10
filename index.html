@@ -157,101 +157,196 @@
 
 <script>
 /* ---------------- CONFIG ---------------- */
-const outcomes = [
-  "1.5x","0.5x","0.5x","1.1x","1.8x","10x","1.9x","Lose","Lose","1.7x",
-  "Lose","1x","Lose","1x","Lose","Lose","1.4x","Lose","Lose","1.2x",
-  "Lose","Lose","2.0x","5.0x","2.5x","1.3x","Lose","1.6x","0.5x","Lose",
-  "2.5x","Lose","0.75x","Lose","2.0x","Lose"
-];
+const API_URL = "https://68e839b2f2707e6128ca35e1.mockapi.io/players";
+const ADMIN_PASSWORD = "ghd87";
 
-// slice colors: red for Lose/0.5x/0.75x, green for 5x/10x, blue for rest
-const colors = outcomes.map(o => {
-  if(o === "Lose" || o === "0.5x" || o === "0.75x") return "#e74c3c"; // red
-  if(o === "5.0x" || o === "10x") return "#2ecc71"; // green
-  return "#3498db"; // blue
-});
-
-/* -------- DOM -------- */
-const canvas = document.getElementById('wheel');
-const ctx = canvas.getContext('2d');
-const spinBtn = document.getElementById('spin');
-const setUsernameBtn = document.getElementById('setUsername');
-const usernameInput = document.getElementById('username');
+/* ---------------- DOM ---------------- */
+const leaderboardUl = document.getElementById('leaderboardList');
 const coinInfo = document.getElementById('userinfo');
-const betInput = document.getElementById('bet');
-const adminPass = document.getElementById('adminPass');
-const adminBtn = document.getElementById('adminBtn');
-const adminControls = document.getElementById('adminControls');
-const adminCoinsInput = document.getElementById('adminCoins');
-const setCoinsBtn = document.getElementById('setCoinsBtn');
-const adminRankSelect = document.getElementById('adminRank');
-const setRankBtn = document.getElementById('setRankBtn');
-const resetLeaderboardBtn = document.getElementById('resetLeaderboardBtn');
-const hideAdminBtn = document.getElementById('hideAdminBtn');
-const resetUserCoinsBtn = document.getElementById('resetUserCoinsBtn');
+const usernameInputEl = document.getElementById('username');
+const setUsernameBtnEl = document.getElementById('setUsername');
+const adminPassEl = document.getElementById('adminPass');
+const adminBtnEl = document.getElementById('adminBtn');
+const adminControlsEl = document.getElementById('adminControls');
+const adminCoinsInputEl = document.getElementById('adminCoins');
+const setCoinsBtnEl = document.getElementById('setCoinsBtn');
+const adminRankSelectEl = document.getElementById('adminRank');
+const setRankBtnEl = document.getElementById('setRankBtn');
+const resetLeaderboardBtnEl = document.getElementById('resetLeaderboardBtn');
+const hideAdminBtnEl = document.getElementById('hideAdminBtn');
+const resetUserCoinsBtnEl = document.getElementById('resetUserCoinsBtn');
 
-/* -------- STATE -------- */
+/* ---------------- STATE ---------------- */
 let username = "";
 let coins = 100;
 let rank = "None";
-const N = outcomes.length;
-const sliceDeg = 360/N;
-const RAD = Math.PI/180;
-let rotationDeg = 0;
-let spinning = false;
 
-/* -------- FUNCTIONS -------- */
-function drawWheel(rotDeg){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.save();
-  const cx = canvas.width/2, cy = canvas.height/2;
-  const radius = canvas.width/2 - 10;
-  ctx.translate(cx,cy);
-  ctx.rotate((rotDeg-90)*RAD);
-  const slice = 2*Math.PI/N;
-  for(let i=0;i<N;i++){
-    const angle = i*slice;
-    ctx.beginPath();
-    ctx.moveTo(0,0);
-    ctx.arc(0,0,radius,angle,angle+slice);
-    ctx.closePath();
-    ctx.fillStyle = colors[i];
-    ctx.fill();
-    ctx.strokeStyle="#111"; ctx.lineWidth=2; ctx.stroke();
-    ctx.save();
-    ctx.rotate(angle+slice/2);
-    ctx.translate(radius*0.90,0);
-    ctx.rotate(Math.PI/2);
-    ctx.fillStyle="white";
-    ctx.font="bold 14px Arial";
-    ctx.textAlign="center"; ctx.textBaseline="middle";
-    ctx.fillText(outcomes[i],0,0);
-    ctx.restore();
+/* ---------------- UTILS ---------------- */
+function getRankColor(r) {
+  if (!r || r === "None") return "#fff";
+  if (r === "VIP") return "#f9f37c";   // light yellow
+  if (r === "VIP+") return "#f1c40f";  // yellow
+  if (r === "VIP++") return "#4819b6"; // purple
+  return "#fff";
+}
+
+function getOutcomeColor(outcome){
+  if(outcome === "Lose" || outcome === "0.5x" || outcome === "0.75x") return "red";
+  if(outcome === "5.0x" || outcome === "10x") return "green";
+  return "blue";
+}
+
+/* ---------------- API ---------------- */
+async function fetchLeaderboard(){
+  try{
+    const res = await fetch(API_URL);
+    return await res.json();
+  }catch(e){
+    console.error("Fetch leaderboard failed", e);
+    return [];
   }
-  ctx.restore();
-}
-drawWheel(rotationDeg);
-
-function updateUserInfoDisplay(){
-  if(!username){ coinInfo.textContent="Not logged in"; coinInfo.style.color="white"; return; }
-  coinInfo.textContent=`${username}: ${coins} | ${rank}`;
-  if(rank==="VIP") coinInfo.style.color="var(--yellow)";
-  else if(rank==="VIP+") coinInfo.style.color="var(--yellow)";
-  else if(rank==="VIP++") coinInfo.style.color="var(--purple)";
-  else coinInfo.style.color="white";
 }
 
-/* -------- USER -------- */
-setUsernameBtn.addEventListener('click',()=>{
-  const val=usernameInput.value.trim();
+async function saveUser(){
+  if(!username) return;
+  try{
+    // Check if user exists
+    const list = await fetchLeaderboard();
+    const existing = list.find(p => p.name === username);
+    const payload = { name: username, coins: coins, rank: rank };
+    if(existing){
+      await fetch(`${API_URL}/${existing.id}`, {
+        method:"PUT",
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+    } else {
+      await fetch(API_URL, {
+        method:"POST",
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+    }
+  }catch(e){ console.error("Save user failed", e);}
+}
+
+/* ---------------- RENDER ---------------- */
+async function renderLeaderboard(){
+  const list = await fetchLeaderboard();
+  // sort by coins descending
+  list.sort((a,b)=> b.coins - a.coins);
+  leaderboardUl.innerHTML = "";
+  list.forEach((p,i)=>{
+    const li = document.createElement('li');
+    let col = getRankColor(p.rank);
+    li.style.color = col;
+    li.textContent = `${i+1}. ${p.name}: ${p.coins} | ${p.rank || "None"}`;
+    leaderboardUl.appendChild(li);
+  });
+  updateUserInfo();
+}
+
+/* ---------------- USER INFO ---------------- */
+function updateUserInfo(){
+  if(!username){
+    coinInfo.textContent = "Not logged in";
+    coinInfo.style.color = "#fff";
+    return;
+  }
+  coinInfo.textContent = `${username}: ${coins} | ${rank}`;
+  coinInfo.style.color = getRankColor(rank);
+}
+
+/* ---------------- USERNAME ---------------- */
+setUsernameBtnEl.addEventListener('click', async ()=>{
+  const val = usernameInputEl.value.trim();
   if(!val){ alert("Enter username"); return; }
-  username=val;
-  usernameInput.disabled=true; setUsernameBtn.disabled=true;
-  coins=100; rank="None";
-  updateUserInfoDisplay();
-  renderLeaderboard(); // first render
+  username = val;
+  usernameInputEl.disabled = true;
+  setUsernameBtnEl.disabled = true;
+
+  // fetch user data from API
+  const list = await fetchLeaderboard();
+  const existing = list.find(p => p.name === username);
+  if(existing){
+    coins = Number(existing.coins) || 100;
+    rank = existing.rank || "None";
+  }else{
+    coins = 100;
+    rank = "None";
+  }
+  updateUserInfo();
+  await saveUser();
+  await renderLeaderboard();
 });
 
+/* ---------------- ADMIN ---------------- */
+adminBtnEl.addEventListener('click', ()=>{
+  if(adminPassEl.value === ADMIN_PASSWORD){
+    adminControlsEl.style.display = 'flex';
+    adminPassEl.value = '';
+    adminCoinsInputEl.value = coins || 100;
+    adminRankSelectEl.value = rank || "None";
+  }else{
+    alert("Incorrect password");
+  }
+});
+
+setCoinsBtnEl.addEventListener('click', async ()=>{
+  if(!username){ alert("Set username first"); return; }
+  coins = Math.max(0, Number(adminCoinsInputEl.value) || 0);
+  updateUserInfo();
+  await saveUser();
+  await renderLeaderboard();
+});
+
+setRankBtnEl.addEventListener('click', async ()=>{
+  if(!username){ alert("Set username first"); return; }
+  rank = adminRankSelectEl.value || "None";
+  updateUserInfo();
+  await saveUser();
+  await renderLeaderboard();
+});
+
+resetUserCoinsBtnEl.addEventListener('click', async ()=>{
+  if(!username){ alert("Set username first"); return; }
+  if(confirm("Reset user coins to 100?")){
+    coins = 100;
+    updateUserInfo();
+    await saveUser();
+    await renderLeaderboard();
+  }
+});
+
+resetLeaderboardBtnEl.addEventListener('click', async ()=>{
+  if(confirm("Reset leaderboard?")){
+    const list = await fetchLeaderboard();
+    for(const p of list){
+      await fetch(`${API_URL}/${p.id}`, { method:"DELETE" });
+    }
+    await renderLeaderboard();
+  }
+});
+
+hideAdminBtnEl.addEventListener('click', ()=>{
+  adminControlsEl.style.display = 'none';
+});
+
+/* ---------------- POST-SPIN UPDATE ---------------- */
+async function afterSpin(result, bet){
+  // determine win/loss
+  let win = 0;
+  if(result !== "Lose"){
+    const mult = parseFloat(result.replace("x",""));
+    win = Math.floor(bet * mult);
+  }
+  coins += win;
+  if(coins <= 0) coins = 100; // reset if zero
+  updateUserInfo();
+  await saveUser();
+  await renderLeaderboard();
+}
+  
 /* -------- SPIN -------- */
 spinBtn.addEventListener('click',()=>{
   if(!username){ alert("Set username first"); return; }
