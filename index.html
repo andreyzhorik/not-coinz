@@ -190,7 +190,7 @@ const setRankBtn = document.getElementById('setRankBtn');
 const resetLeaderboardBtn = document.getElementById('resetLeaderboardBtn');
 const hideAdminBtn = document.getElementById('hideAdminBtn');
 const resetUserCoinsBtn = document.getElementById('resetUserCoinsBtn');
-
+z
 /* -------- STATE -------- */
 let username = "";
 let coins = 100;
@@ -484,8 +484,8 @@ hideAdminBtnEl.addEventListener('click', ()=>{
 
 /* ---------------- POST-SPIN UPDATE ---------------- */
 async function afterSpin(result, bet){
-  // determine win/loss
-  let win = 0;
+ // Inside your spin function, after calculating win/loss
+await afterSpin(result, bet);
   if(result !== "Lose"){
     const mult = parseFloat(result.replace("x",""));
     win = Math.floor(bet * mult);
