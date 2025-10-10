@@ -304,6 +304,62 @@ setUsernameBtn.addEventListener('click', async ()=>{
     updateUserInfoDisplay();
     renderLeaderboard();
 });
+  /* -------- ADMIN PANEL -------- */
+const adminPass = document.getElementById('adminPass');
+const adminBtn = document.getElementById('adminBtn');
+const adminControls = document.getElementById('adminControls');
+const adminCoinsInput = document.getElementById('adminCoins');
+const setCoinsBtn = document.getElementById('setCoinsBtn');
+const adminRankSelect = document.getElementById('adminRank');
+const setRankBtn = document.getElementById('setRankBtn');
+const resetLeaderboardBtn = document.getElementById('resetLeaderboardBtn');
+const hideAdminBtn = document.getElementById('hideAdminBtn');
+const resetUserCoinsBtn = document.getElementById('resetUserCoinsBtn');
+
+adminBtn.addEventListener('click', ()=>{
+    if(adminPass.value==="ghd87"){  // your admin password
+        adminControls.style.display='flex';
+        adminPass.value='';
+        adminCoinsInput.value = coins;
+        adminRankSelect.value = rank;
+    } else alert("Incorrect password");
+});
+
+setCoinsBtn.addEventListener('click', ()=>{
+    const v = Math.max(0, Math.floor(Number(adminCoinsInput.value)||0));
+    coins = v;
+    updateUserAndServer();
+    alert("Coins set to "+coins);
+});
+
+setRankBtn.addEventListener('click', ()=>{
+    const r = adminRankSelect.value || "None";
+    rank = r;
+    updateUserAndServer();
+    alert("Rank set to "+rank);
+});
+
+resetUserCoinsBtn.addEventListener('click', ()=>{
+    if(!username) return;
+    if(confirm("Reset current user's coins to 100?")){
+        coins=100;
+        updateUserAndServer();
+    }
+});
+
+resetLeaderboardBtn.addEventListener('click', async ()=>{
+    if(confirm("Reset leaderboard?")){
+        const list = await fetchLeaderboard();
+        for(const p of list){
+            await fetch(`${API_URL}/${p.id}`, {method:"DELETE"});
+        }
+        await renderLeaderboard();
+        alert("Leaderboard cleared");
+    }
+});
+
+hideAdminBtn.addEventListener('click', ()=>{ adminControls.style.display='none'; });
+
 
 /* -------- SPIN OVERRIDE -------- */
 spinBtn.addEventListener('click', async ()=>{
