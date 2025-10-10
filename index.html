@@ -520,6 +520,11 @@ hideAdminBtn.addEventListener('click', ()=>{ adminControls.style.display='none';
 /* -------- INIT -------- */
 renderLeaderboard();
 updateUserInfoDisplay();
+ 
+  // Auto-save every 5 seconds
+setInterval(() => {
+    if(username) saveCurrentToServer();
+}, 5000);
 
 </script>
 </body>
