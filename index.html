@@ -154,6 +154,41 @@ h2 {
   cursor: pointer;
 var(--white);
 }
+
+/* --- SHOP STYLES --- */
+#shop {
+  margin-top: 30px;
+  background: var(--panel-bg);
+  border-radius: 8px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+#shop h2 {
+  margin-bottom: 12px;
+}
+.shop-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.shop-item button {
+  background: var(--accent);
+  color: var(--white);
+  border: none;
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.shop-item .vip-label {
+  font-weight: bold;
+}
+.shop-item .vip-label.vip { color: var(--yellow); }
+.shop-item .vip-label.vip-plus { color: var(--yellow); }
+.shop-item .vip-label.vip-plusplus { color: var(--purple); }
 canvas {
   border: 6px solid var(--white);
   border-radius: 50%;
@@ -197,8 +232,23 @@ canvas {
       <input id="giveAmount" type="number" placeholder="Amount">
       <button id="giveBtn">Give</button>
     </div>
-       </div>
+    <!-- SHOP SECTION START -->
+    <div id="shop">
+      <h2>🛒 Shop</h2>
+      <div class="shop-item">
+        <span class="vip-label vip">VIP</span>
+        <button id="buyVIP">Buy for 1000</button>
+      </div>
+      <div class="shop-item">
+        <span class="vip-label vip-plus">VIP+</span>
+        <button id="buyVIPplus">Buy for 5000</button>
+      </div>
+      <div class="shop-item">
+        <span class="vip-label vip-plusplus">VIP++</span>
+        <button id="buyVIPplusplus">Buy for 10000</button>
+      </div>
     </div>
+    <!-- SHOP SECTION END -->
   </div>
 </div>
 
@@ -233,6 +283,11 @@ const sendChat = document.getElementById("sendChat");
 const giveToUser = document.getElementById("giveToUser");
 const giveAmount = document.getElementById("giveAmount");
 const giveBtn = document.getElementById("giveBtn");
+
+// SHOP BUTTONS
+const buyVIPBtn = document.getElementById("buyVIP");
+const buyVIPplusBtn = document.getElementById("buyVIPplus");
+const buyVIPplusplusBtn = document.getElementById("buyVIPplusplus");
 
 /* ---------------- STATE ---------------- */
 let rotationDeg = 0;
@@ -533,7 +588,69 @@ giveBtn.onclick = async () => {
   renderLeaderboard();
   alert(`Given ${amt} coins to ${to}`);
 };
-  
+
+/* ---------------- SHOP LOGIC ---------------- */
+buyVIPBtn.onclick = async () => {
+  if (!username) {
+    alert("Login first to buy VIP!");
+    return;
+  }
+  if (rank === "VIP" || rank === "VIP+" || rank === "VIP++") {
+    alert("You already have a VIP rank or higher!");
+    return;
+  }
+  if (coins < 1000) {
+    alert("Not enough coins for VIP!");
+    return;
+  }
+  coins -= 1000;
+  rank = "VIP";
+  await updatePlayerOnServer({name: username, password, coins, rank});
+  updateInfo();
+  renderLeaderboard();
+  alert("You bought VIP!");
+};
+buyVIPplusBtn.onclick = async () => {
+  if (!username) {
+    alert("Login first to buy VIP+!");
+    return;
+  }
+  if (rank === "VIP+" || rank === "VIP++") {
+    alert("You already have VIP+ or higher!");
+    return;
+  }
+  if (coins < 5000) {
+    alert("Not enough coins for VIP+!");
+    return;
+  }
+  coins -= 5000;
+  rank = "VIP+";
+  await updatePlayerOnServer({name: username, password, coins, rank});
+  updateInfo();
+  renderLeaderboard();
+  alert("You bought VIP+!");
+};
+buyVIPplusplusBtn.onclick = async () => {
+  if (!username) {
+    alert("Login first to buy VIP++!");
+    return;
+  }
+  if (rank === "VIP++") {
+    alert("You already have VIP++!");
+    return;
+  }
+  if (coins < 10000) {
+    alert("Not enough coins for VIP++!");
+    return;
+  }
+  coins -= 10000;
+  rank = "VIP++";
+  await updatePlayerOnServer({name: username, password, coins, rank});
+  updateInfo();
+  renderLeaderboard();
+  alert("You bought VIP++!");
+};
+
 /* ---------------- INIT ---------------- */
 drawWheel(rotationDeg);
 updateInfo();
