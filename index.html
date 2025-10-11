@@ -312,7 +312,45 @@ let rank = "None";
 let luckBonus = 0; // in percent (0, 5, 20)
 
 /* ---------------- DRAW WHEEL ---------------- */
-// (no change)
+function drawWheel(rotDeg) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const cx = canvas.width / 2, cy = canvas.height / 2;
+  const radius = Math.min(cx, cy) - 10;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate((rotDeg - 90) * Math.PI / 180);
+  const slice = 2 * Math.PI / N;
+  for (let i = 0; i < N; i++) {
+    const angle = i * slice;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, radius, angle, angle + slice);
+    ctx.closePath();
+    // color logic
+    const out = WHEEL_OUTCOMES[i];
+    let fill = "#3498db";
+    if (out === "Lose" || out === "0.5x" || out === "0.75x") fill = "#e74c3c";
+    if (out === "5.0x" || out === "10x") fill = "#2ecc71";
+    ctx.fillStyle = fill;
+    ctx.fill();
+    ctx.strokeStyle = "#111";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // text
+    ctx.save();
+    ctx.rotate(angle + slice / 2);
+    ctx.translate(radius * 0.9, 0);
+    ctx.rotate(Math.PI / 2);
+    ctx.fillStyle = "white";
+    ctx.font = "bold 14px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(WHEEL_OUTCOMES[i], 0, 0);
+    ctx.restore();
+  }
+  ctx.restore();
+}
 
 /* ---------------- SPIN LOGIC ---------------- */
 spinBtn.onclick = () => {
