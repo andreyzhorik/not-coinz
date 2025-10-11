@@ -197,11 +197,10 @@ canvas {
 </style>
 </head>
   <body>
-<div id="main-container">
-  <div id="left-panel">
-    <h2>🏆 Leaderboard</h2>
-    <ul id="leaderboardList"></ul>
-
+<div>
+  <h2>🏆 Leaderboard</h2>
+  <ul id="leaderboardList"></ul>
+</div>
     <div id="chat-box">
       <h2>💬 Chat</h2>
       <div id="chat-messages"></div>
@@ -441,68 +440,63 @@ spinBtn.onclick = () => {
 
 
 /* ---------------- LEADERBOARD ---------------- */
+const API_URL = "https://68e839b2f2707e6128ca35e1.mockapi.io/players";
+
+async function fetchPlayers() {
+  const r = await fetch(API_URL);
+  return await r.json();
+}
+
 async function renderLeaderboard() {
   const ul = document.getElementById("leaderboardList");
   ul.innerHTML = "";
   const list = await fetchPlayers();
-  list.sort((a, b) => b.coins - a.coins);
-  list.slice(0, MAX_USERS).forEach((p, i) => {
+  list.sort((a, b) => b.coins - a.coins); // highest coins first
+  list.forEach((p, i) => {
     const li = document.createElement("li");
     li.textContent = `${i + 1}. ${p.name}: ${p.coins} | ${p.rank || "None"}`;
-    // color names in leaderboard based on rank
-    if (p.rank === "VIP" || p.rank === "VIP+") {
-      li.style.color = "var(--yellow)";
-    } else if (p.rank === "VIP++") {
-      li.style.color = "var(--purple)";
-    }
     ul.appendChild(li);
   });
 }
 
 /* ---------------- CHAT ---------------- */
-async function loadChat() {
+const CHAT_URL = "https://68e839b2f2707e6128ca35e1.mockapi.io/chat";
+// Fill this with your app's login logic!
+let username = "YourName"; 
+
+async function fetchChat() {
+  const r = await fetch(CHAT_URL);
+  return await r.json();
+}
+
+async function renderChat() {
+  const chatMessages = document.getElementById("chat-messages");
   const msgs = await fetchChat();
   chatMessages.innerHTML = "";
   msgs.slice(-50).forEach(m => {
     const div = document.createElement("div");
-    // color by rank if we can find user
-    const span = document.createElement("span");
-    span.textContent = `${m.user}: `;
-    let userRank = null;
-    // we fetch players synchronously (not efficient, but simple) to get rank
-    fetchPlayers().then(list => {
-      const u = list.find(p => p.name === m.user);
-      if (u && u.rank) {
-        userRank = u.rank;
-        if (userRank === "VIP" || userRank === "VIP+") span.style.color = "var(--yellow)";
-        else if (userRank === "VIP++") span.style.color = "var(--purple)";
-      }
-    });
-    const textNode = document.createTextNode(m.text);
-    div.appendChild(span);
-    div.appendChild(textNode);
+    div.textContent = `${m.user}: ${m.text}`;
     chatMessages.appendChild(div);
   });
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-sendChat.onclick = async () => {
-  if (!username) {
-    alert("Login first");
-    return;
-  }
-  const txt = chatInput.value.trim();
+document.getElementById("sendChat").onclick = async () => {
+  const input = document.getElementById("chatMessage");
+  const txt = input.value.trim();
   if (!txt) return;
   await fetch(CHAT_URL, {
     method: "POST",
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({user: username, text: txt})
   });
-  chatInput.value = "";
-  loadChat();
+  input.value = "";
+  renderChat();
 };
-setInterval(loadChat, 5000);
 
+renderChat();
+setInterval(renderChat, 5000);
+  
 /* ---------------- GIVE COINS ---------------- */
 giveBtn.onclick = async () => {
   if (!username) {
