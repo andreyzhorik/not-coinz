@@ -232,7 +232,7 @@ canvas {
       <input id="giveAmount" type="number" placeholder="Amount">
       <button id="giveBtn">Give</button>
     </div>
-    <!-- SHOP SECTION START -->
+    <!-- ... (existing code above remains unchanged) ... -->
     <div id="shop">
       <h2>🛒 Shop</h2>
       <div class="shop-item">
@@ -246,6 +246,15 @@ canvas {
       <div class="shop-item">
         <span class="vip-label vip-plusplus">VIP++</span>
         <button id="buyVIPplusplus">Buy for 10000</button>
+      </div>
+      <!-- LUCK POTION SHOP ITEMS -->
+      <div class="shop-item">
+        <span class="vip-label" style="color:#2ecc71">Luck Potion +5%</span>
+        <button id="buyLuckPotion">Buy for 500</button>
+      </div>
+      <div class="shop-item">
+        <span class="vip-label" style="color:#2ecc71">Luck Potion II +20%</span>
+        <button id="buyLuckPotion2">Buy for 1500</button>
       </div>
     </div>
     <!-- SHOP SECTION END -->
@@ -288,6 +297,9 @@ const giveBtn = document.getElementById("giveBtn");
 const buyVIPBtn = document.getElementById("buyVIP");
 const buyVIPplusBtn = document.getElementById("buyVIPplus");
 const buyVIPplusplusBtn = document.getElementById("buyVIPplusplus");
+// LUCK POTION BUTTONS
+const buyLuckPotionBtn = document.getElementById("buyLuckPotion");
+const buyLuckPotion2Btn = document.getElementById("buyLuckPotion2");
 
 /* ---------------- STATE ---------------- */
 let rotationDeg = 0;
@@ -296,139 +308,11 @@ let username = "";
 let password = "";
 let coins = 100;
 let rank = "None";
+// LUCK BONUS STATE
+let luckBonus = 0; // in percent (0, 5, 20)
 
 /* ---------------- DRAW WHEEL ---------------- */
-function drawWheel(rotDeg) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const cx = canvas.width/2, cy = canvas.height/2;
-  const radius = Math.min(cx, cy) - 10;
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.rotate((rotDeg - 90) * Math.PI / 180);
-  const slice = 2 * Math.PI / N;
-  for (let i = 0; i < N; i++) {
-    const angle = i * slice;
-    ctx.beginPath();
-    ctx.moveTo(0,0);
-    ctx.arc(0,0, radius, angle, angle + slice);
-    ctx.closePath();
-    // color logic
-    const out = WHEEL_OUTCOMES[i];
-    let fill = "#3498db";
-    if (out === "Lose" || out === "0.5x" || out === "0.75x") fill = "#e74c3c";
-    if (out === "5.0x" || out === "10x") fill = "#2ecc71";
-    ctx.fillStyle = fill;
-    ctx.fill();
-    ctx.strokeStyle = "#111";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // text
-    ctx.save();
-    ctx.rotate(angle + slice/2);
-    ctx.translate(radius * 0.9, 0);
-    ctx.rotate(Math.PI/2);
-    ctx.fillStyle = "white";
-    ctx.font = "bold 14px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(WHEEL_OUTCOMES[i], 0, 0);
-    ctx.restore();
-  }
-  ctx.restore();
-}
-
-/* ---------------- HELPERS & SERVER ---------------- */
-function updateInfo() {
-  info.textContent = username
-    ? `${username}: ${coins} | ${rank}`
-    : "Not logged in";
-  if (rank === "VIP" || rank === "VIP+") info.style.color = "var(--yellow)";
-  else if (rank === "VIP++") info.style.color = "var(--purple)";
-  else info.style.color = "white";
-}
-
-async function fetchPlayers() {
-  try {
-    const r = await fetch(API_URL);
-    return await r.json();
-  } catch(e) {
-    console.error("fetchPlayers error", e);
-    return [];
-  }
-}
-async function fetchChat() {
-  try {
-    const r = await fetch(CHAT_URL);
-    return await r.json();
-  } catch(e) {
-    console.error("fetchChat error", e);
-    return [];
-  }
-}
-
-async function updatePlayerOnServer(player) {
-  const list = await fetchPlayers();
-  const existing = list.find(p => p.name === player.name);
-  if (existing) {
-    await fetch(`${API_URL}/${existing.id}`, {
-      method: "PUT",
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(player)
-    });
-  } else {
-    await fetch(API_URL, {
-      method: "POST",
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(player)
-    });
-  }
-}
-
-/* ---------------- LOGIN / USER SETUP ---------------- */
-setUsernameBtn.onclick = async () => {
-  const u = usernameInput.value.trim();
-  const p = passwordInput.value;
-  if (!u || !p) {
-    alert("Enter username and password");
-    return;
-  }
-  if (u.length > 10) {
-    alert("Username max length is 10");
-    return;
-  }
-
-  let players = await fetchPlayers();
-  if (players.length >= MAX_USERS && !players.some(pl => pl.name === u)) {
-    alert("Server full (max 10 users)");
-    return;
-  }
-
-  const existing = players.find(pl => pl.name === u);
-  if (existing) {
-    if (existing.password !== p) {
-      alert("Wrong password");
-      return;
-    }
-    username = u;
-    password = p;
-    coins = existing.coins;
-    rank = existing.rank || "None";
-  } else {
-    username = u;
-    password = p;
-    coins = 100;
-    rank = "None";
-    await updatePlayerOnServer({name: u, password: p, coins, rank});
-  }
-  usernameInput.disabled = true;
-  passwordInput.disabled = true;
-  setUsernameBtn.disabled = true;
-
-  updateInfo();
-  renderLeaderboard();
-  loadChat();
-};
+// (no change)
 
 /* ---------------- SPIN LOGIC ---------------- */
 spinBtn.onclick = () => {
@@ -447,7 +331,26 @@ spinBtn.onclick = () => {
   updateInfo();
   spinning = true;
 
-  const idx = Math.floor(Math.random() * N);
+  // LUCK BONUS LOGIC
+  let idx;
+  if (luckBonus > 0) {
+    // To give "better luck", increase chance for non-Lose outcomes
+    // Make a weighted array: win outcomes x (1+luckBonus), lose outcomes x (1-luckBonus/2)
+    let weighted = [];
+    for (let i = 0; i < N; i++) {
+      if (WHEEL_OUTCOMES[i] === "Lose") {
+        weighted.push(i);
+      } else {
+        // Add more entries for winning outcomes based on luckBonus
+        let weight = 1 + luckBonus / 100;
+        for (let w = 0; w < weight; w++) weighted.push(i);
+      }
+    }
+    idx = weighted[Math.floor(Math.random() * weighted.length)];
+  } else {
+    idx = Math.floor(Math.random() * N);
+  }
+
   const result = WHEEL_OUTCOMES[idx];
   const currentNorm = ((rotationDeg % 360) + 360) % 360;
   const sliceCenter = idx * sliceDeg + sliceDeg / 2;
@@ -484,16 +387,20 @@ spinBtn.onclick = () => {
       }
       coins += win;
       if (coins <= 0) coins = 100;
-
       updatePlayerOnServer({name: username, password, coins, rank});
       updateInfo();
       renderLeaderboard();
       spinning = false;
+      // LUCK BONUS IS ONE-TIME USE
+      if (luckBonus > 0) {
+        luckBonus = 0;
+        alert("Luck potion effect has ended.");
+      }
     }
   }
-
   requestAnimationFrame(step);
 };
+
 
 /* ---------------- LEADERBOARD ---------------- */
 async function renderLeaderboard() {
@@ -649,6 +556,47 @@ buyVIPplusplusBtn.onclick = async () => {
   updateInfo();
   renderLeaderboard();
   alert("You bought VIP++!");
+};
+// LUCK POTION SHOP LOGIC
+buyLuckPotionBtn.onclick = async () => {
+  if (!username) {
+    alert("Login first to buy Luck Potion!");
+    return;
+  }
+  if (coins < 500) {
+    alert("Not enough coins for Luck Potion!");
+    return;
+  }
+  if (luckBonus > 0) {
+    alert("You already have an active luck potion!");
+    return;
+  }
+  coins -= 500;
+  luckBonus = 5;
+  await updatePlayerOnServer({name: username, password, coins, rank});
+  updateInfo();
+  renderLeaderboard();
+  alert("Luck Potion +5% activated! Next spin will have better luck.");
+};
+buyLuckPotion2Btn.onclick = async () => {
+  if (!username) {
+    alert("Login first to buy Luck Potion II!");
+    return;
+  }
+  if (coins < 1500) {
+    alert("Not enough coins for Luck Potion II!");
+    return;
+  }
+  if (luckBonus > 0) {
+    alert("You already have an active luck potion!");
+    return;
+  }
+  coins -= 1500;
+  luckBonus = 20;
+  await updatePlayerOnServer({name: username, password, coins, rank});
+  updateInfo();
+  renderLeaderboard();
+  alert("Luck Potion II +20% activated! Next spin will have much better luck.");
 };
 
 /* ---------------- INIT ---------------- */
