@@ -105,8 +105,16 @@ h2 {
   padding: 6px;
   border: none;
   border-radius: 4px;
-  background: #262636;
+  background: #e61f15;
   color: var(--white);
+}
+#wheel-pointer {
+  font-size: 28px;
+  color: #f1c40f;
+  position: relative;
+  top: -410px; /* adjust if your wheel size changes */
+  text-align: center;
+  pointer-events: none;
 }
 #giveBtn {
   width: 100%;
@@ -184,6 +192,7 @@ canvas {
   <div id="center-panel">
     <canvas id="wheel" width="400" height="400"></canvas>
     <div id="controls">
+    <div id="wheel-pointer">▲</div>
       <input id="username" type="text" placeholder="Username (max 10)" maxlength="10">
       <input id="userPassword" type="password" placeholder="Password">
       <button id="setUsername">Set Username</button>
