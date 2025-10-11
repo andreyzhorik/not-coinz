@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Spin the Wheel — VIP</title>
-<style>
+  <meta charset="UTF-8">
+  <title>Spin the Wheel — VIP</title>
+  <style>
 :root {
   --bg: #0f0f18;
   --panel-bg: #1a1a28;
@@ -36,7 +36,7 @@ body {
   background: var(--panel-bg);
   border-radius: 8px;
   padding: 15px;
-  width: 250px;
+  width: 260px;
   height: calc(100vh - 60px);
   box-sizing: border-box;
   display: flex;
@@ -74,6 +74,7 @@ h2 {
   border-radius: 6px;
   padding: 10px;
   overflow-y: auto;
+  height: 140px;
 }
 #chat-input-area {
   display: flex;
@@ -112,9 +113,9 @@ h2 {
   font-size: 36px;
   color: #f1c40f;
   position: relative;
-  top: -450px;  /* higher position above the wheel */
+  top: -450px;
   text-align: center;
-  transform: rotate(180deg); /* flip 180 degrees */
+  transform: rotate(180deg);
   pointer-events: none;
   text-shadow: 0 0 10px #f1c40f;
 }
@@ -152,10 +153,12 @@ h2 {
   background: var(--accent);
   color: var(--white);
   cursor: pointer;
-var(--white);
 }
-
-/* --- SHOP STYLES --- */
+canvas {
+  border: 6px solid var(--white);
+  border-radius: 50%;
+  background: var(--dark);
+}
 #shop {
   margin-top: 30px;
   background: var(--panel-bg);
@@ -189,18 +192,20 @@ var(--white);
 .shop-item .vip-label.vip { color: var(--yellow); }
 .shop-item .vip-label.vip-plus { color: var(--yellow); }
 .shop-item .vip-label.vip-plusplus { color: var(--purple); }
-canvas {
-  border: 6px solid var(--white);
-  border-radius: 50%;
-  background: var(--dark);
+.shop-item .vip-label.luck { color: #2ecc71; }
+#luck-timer {
+  font-size: 13px;
+  font-weight: normal;
+  color: #2ecc71;
+  margin-left: 8px;
 }
-</style>
+  </style>
 </head>
-  <body>
-<div>
-  <h2>🏆 Leaderboard</h2>
-  <ul id="leaderboardList"></ul>
-</div>
+<body>
+<div id="main-container">
+  <div id="left-panel">
+    <h2>🏆 Leaderboard</h2>
+    <ul id="leaderboardList"></ul>
     <div id="chat-box">
       <h2>💬 Chat</h2>
       <div id="chat-messages"></div>
@@ -210,11 +215,10 @@ canvas {
       </div>
     </div>
   </div>
-
   <div id="center-panel">
     <canvas id="wheel" width="400" height="400"></canvas>
     <div id="controls">
-    <div id="wheel-pointer">▲</div>
+      <div id="wheel-pointer">▲</div>
       <input id="username" type="text" placeholder="Username (max 10)" maxlength="10">
       <input id="userPassword" type="password" placeholder="Password">
       <button id="setUsername">Set Username</button>
@@ -223,7 +227,6 @@ canvas {
       <button id="spin">SPIN 🎡</button>
     </div>
   </div>
-
   <div id="right-panel">
     <h2>🎁 Give Coins</h2>
     <div id="give-coins">
@@ -231,7 +234,6 @@ canvas {
       <input id="giveAmount" type="number" placeholder="Amount">
       <button id="giveBtn">Give</button>
     </div>
-    <!-- ... (existing code above remains unchanged) ... -->
     <div id="shop">
       <h2>🛒 Shop</h2>
       <div class="shop-item">
@@ -246,22 +248,20 @@ canvas {
         <span class="vip-label vip-plusplus">VIP++</span>
         <button id="buyVIPplusplus">Buy for 10000</button>
       </div>
-      <!-- LUCK POTION SHOP ITEMS -->
       <div class="shop-item">
-        <span class="vip-label" style="color:#2ecc71">Luck Potion +5%</span>
+        <span class="vip-label luck">Luck Potion +5%</span>
         <button id="buyLuckPotion">Buy for 500</button>
+        <span id="luck-timer-5"></span>
       </div>
       <div class="shop-item">
-        <span class="vip-label" style="color:#2ecc71">Luck Potion II +20%</span>
+        <span class="vip-label luck">Luck Potion II +20%</span>
         <button id="buyLuckPotion2">Buy for 1500</button>
+        <span id="luck-timer-20"></span>
       </div>
     </div>
-    <!-- SHOP SECTION END -->
   </div>
 </div>
-
 <script>
-/* ---------------- CONFIG ---------------- */
 const API_URL = "https://68e839b2f2707e6128ca35e1.mockapi.io/players";
 const CHAT_URL = "https://68e839b2f2707e6128ca35e1.mockapi.io/chat";
 const MAX_USERS = 10;
@@ -274,7 +274,7 @@ const WHEEL_OUTCOMES = [
 const N = WHEEL_OUTCOMES.length;
 const sliceDeg = 360 / N;
 
-/* ---------------- DOM ---------------- */
+// DOM
 const canvas = document.getElementById("wheel");
 const ctx = canvas.getContext("2d");
 const spinBtn = document.getElementById("spin");
@@ -283,37 +283,37 @@ const usernameInput = document.getElementById("username");
 const passwordInput = document.getElementById("userPassword");
 const setUsernameBtn = document.getElementById("setUsername");
 const info = document.getElementById("userinfo");
-
 const chatMessages = document.getElementById("chat-messages");
 const chatInput = document.getElementById("chatMessage");
 const sendChat = document.getElementById("sendChat");
-
 const giveToUser = document.getElementById("giveToUser");
 const giveAmount = document.getElementById("giveAmount");
 const giveBtn = document.getElementById("giveBtn");
-
-// SHOP BUTTONS
 const buyVIPBtn = document.getElementById("buyVIP");
 const buyVIPplusBtn = document.getElementById("buyVIPplus");
 const buyVIPplusplusBtn = document.getElementById("buyVIPplusplus");
-// LUCK POTION BUTTONS
 const buyLuckPotionBtn = document.getElementById("buyLuckPotion");
 const buyLuckPotion2Btn = document.getElementById("buyLuckPotion2");
+const luckTimer5 = document.getElementById("luck-timer-5");
+const luckTimer20 = document.getElementById("luck-timer-20");
 
-/* ---------------- STATE ---------------- */
+// STATE
 let rotationDeg = 0;
 let spinning = false;
 let username = "";
 let password = "";
 let coins = 100;
 let rank = "None";
-// LUCK BONUS STATE
-let luckBonus = 0; // in percent (0, 5, 20)
+// Potion state
+let luckBonus = 0; // 0, 5, 20
+let luckTimerEnd = 0; // timestamp
+let luckTimerActive = false;
+let luckInterval = null;
 
-/* ---------------- DRAW WHEEL ---------------- */
+// FUNCTIONS
 function drawWheel(rotDeg) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const cx = canvas.width / 2, cy = canvas.height / 2;
+  const cx = canvas.width/2, cy = canvas.height/2;
   const radius = Math.min(cx, cy) - 10;
   ctx.save();
   ctx.translate(cx, cy);
@@ -322,8 +322,8 @@ function drawWheel(rotDeg) {
   for (let i = 0; i < N; i++) {
     const angle = i * slice;
     ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.arc(0, 0, radius, angle, angle + slice);
+    ctx.moveTo(0,0);
+    ctx.arc(0,0, radius, angle, angle + slice);
     ctx.closePath();
     // color logic
     const out = WHEEL_OUTCOMES[i];
@@ -338,9 +338,9 @@ function drawWheel(rotDeg) {
 
     // text
     ctx.save();
-    ctx.rotate(angle + slice / 2);
+    ctx.rotate(angle + slice/2);
     ctx.translate(radius * 0.9, 0);
-    ctx.rotate(Math.PI / 2);
+    ctx.rotate(Math.PI/2);
     ctx.fillStyle = "white";
     ctx.font = "bold 14px Arial";
     ctx.textAlign = "center";
@@ -351,7 +351,175 @@ function drawWheel(rotDeg) {
   ctx.restore();
 }
 
-/* ---------------- SPIN LOGIC ---------------- */
+function updateInfo() {
+  info.textContent = username
+    ? `${username}: ${coins} | ${rank}`
+    : "Not logged in";
+  if (rank === "VIP" || rank === "VIP+") info.style.color = "var(--yellow)";
+  else if (rank === "VIP++") info.style.color = "var(--purple)";
+  else info.style.color = "white";
+}
+
+async function fetchPlayers() {
+  try {
+    const r = await fetch(API_URL);
+    return await r.json();
+  } catch(e) {
+    return [];
+  }
+}
+
+async function updatePlayerOnServer(player) {
+  const list = await fetchPlayers();
+  const existing = list.find(p => p.name === player.name);
+  if (existing) {
+    await fetch(`${API_URL}/${existing.id}`, {
+      method: "PUT",
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(player)
+    });
+  } else {
+    await fetch(API_URL, {
+      method: "POST",
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(player)
+    });
+  }
+}
+
+async function renderLeaderboard() {
+  const ul = document.getElementById("leaderboardList");
+  ul.innerHTML = "";
+  const list = await fetchPlayers();
+  list.sort((a, b) => b.coins - a.coins);
+  list.slice(0, MAX_USERS).forEach((p, i) => {
+    const li = document.createElement("li");
+    li.textContent = `${i + 1}. ${p.name}: ${p.coins} | ${p.rank || "None"}`;
+    if (p.rank === "VIP" || p.rank === "VIP+") {
+      li.style.color = "var(--yellow)";
+    } else if (p.rank === "VIP++") {
+      li.style.color = "var(--purple)";
+    }
+    ul.appendChild(li);
+  });
+}
+
+async function fetchChat() {
+  try {
+    const r = await fetch(CHAT_URL);
+    return await r.json();
+  } catch(e) {
+    return [];
+  }
+}
+
+async function renderChat() {
+  const msgs = await fetchChat();
+  chatMessages.innerHTML = "";
+  msgs.slice(-50).forEach(m => {
+    const div = document.createElement("div");
+    const span = document.createElement("span");
+    span.textContent = `${m.user}: `;
+    fetchPlayers().then(list => {
+      const u = list.find(p => p.name === m.user);
+      if (u && u.rank) {
+        if (u.rank === "VIP" || u.rank === "VIP+") span.style.color = "var(--yellow)";
+        else if (u.rank === "VIP++") span.style.color = "var(--purple)";
+      }
+    });
+    div.appendChild(span);
+    div.appendChild(document.createTextNode(m.text));
+    chatMessages.appendChild(div);
+  });
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// TIMER for luck potions
+function startLuckTimer(percent) {
+  luckBonus = percent;
+  luckTimerEnd = Date.now() + 5 * 60 * 1000; // 5 min
+  luckTimerActive = true;
+  updateLuckTimerDisplay();
+  buyLuckPotionBtn.disabled = true;
+  buyLuckPotion2Btn.disabled = true;
+  if (luckInterval) clearInterval(luckInterval);
+  luckInterval = setInterval(() => {
+    updateLuckTimerDisplay();
+    if (Date.now() >= luckTimerEnd) {
+      clearInterval(luckInterval);
+      luckBonus = 0;
+      luckTimerActive = false;
+      luckTimerEnd = 0;
+      buyLuckPotionBtn.disabled = false;
+      buyLuckPotion2Btn.disabled = false;
+      luckTimer5.textContent = "";
+      luckTimer20.textContent = "";
+      alert("Luck potion effect has ended.");
+    }
+  }, 1000);
+}
+
+function updateLuckTimerDisplay() {
+  if (!luckTimerActive) {
+    luckTimer5.textContent = "";
+    luckTimer20.textContent = "";
+    return;
+  }
+  const seconds = Math.max(0, Math.floor((luckTimerEnd - Date.now()) / 1000));
+  const min = Math.floor(seconds / 60);
+  const sec = seconds % 60;
+  if (luckBonus === 5) {
+    luckTimer5.textContent = `⏳ ${min}:${sec < 10 ? "0" : ""}${sec}`;
+    luckTimer20.textContent = "";
+  } else if (luckBonus === 20) {
+    luckTimer20.textContent = `⏳ ${min}:${sec < 10 ? "0" : ""}${sec}`;
+    luckTimer5.textContent = "";
+  }
+}
+
+// LOGIN
+setUsernameBtn.onclick = async () => {
+  const u = usernameInput.value.trim();
+  const p = passwordInput.value;
+  if (!u || !p) {
+    alert("Enter username and password");
+    return;
+  }
+  if (u.length > 10) {
+    alert("Username max length is 10");
+    return;
+  }
+  let players = await fetchPlayers();
+  if (players.length >= MAX_USERS && !players.some(pl => pl.name === u)) {
+    alert("Server full (max 10 users)");
+    return;
+  }
+  const existing = players.find(pl => pl.name === u);
+  if (existing) {
+    if (existing.password !== p) {
+      alert("Wrong password");
+      return;
+    }
+    username = u;
+    password = p;
+    coins = existing.coins;
+    rank = existing.rank || "None";
+  } else {
+    username = u;
+    password = p;
+    coins = 100;
+    rank = "None";
+    await updatePlayerOnServer({name: u, password: p, coins, rank});
+  }
+  usernameInput.disabled = true;
+  passwordInput.disabled = true;
+  setUsernameBtn.disabled = true;
+  updateInfo();
+  renderLeaderboard();
+  renderChat();
+};
+
+// SPIN LOGIC
 spinBtn.onclick = () => {
   if (!username) {
     alert("Login first");
@@ -363,7 +531,6 @@ spinBtn.onclick = () => {
     alert("Invalid bet");
     return;
   }
-
   coins -= bet;
   updateInfo();
   spinning = true;
@@ -371,14 +538,12 @@ spinBtn.onclick = () => {
   // LUCK BONUS LOGIC
   let idx;
   if (luckBonus > 0) {
-    // To give "better luck", increase chance for non-Lose outcomes
-    // Make a weighted array: win outcomes x (1+luckBonus), lose outcomes x (1-luckBonus/2)
+    // Weighted for winning outcomes
     let weighted = [];
     for (let i = 0; i < N; i++) {
       if (WHEEL_OUTCOMES[i] === "Lose") {
         weighted.push(i);
       } else {
-        // Add more entries for winning outcomes based on luckBonus
         let weight = 1 + luckBonus / 100;
         for (let w = 0; w < weight; w++) weighted.push(i);
       }
@@ -428,76 +593,12 @@ spinBtn.onclick = () => {
       updateInfo();
       renderLeaderboard();
       spinning = false;
-      // LUCK BONUS IS ONE-TIME USE
-      if (luckBonus > 0) {
-        luckBonus = 0;
-        alert("Luck potion effect has ended.");
-      }
     }
   }
   requestAnimationFrame(step);
 };
 
-
-/* ---------------- LEADERBOARD ---------------- */
-const API_URL = "https://68e839b2f2707e6128ca35e1.mockapi.io/players";
-
-async function fetchPlayers() {
-  const r = await fetch(API_URL);
-  return await r.json();
-}
-
-async function renderLeaderboard() {
-  const ul = document.getElementById("leaderboardList");
-  ul.innerHTML = "";
-  const list = await fetchPlayers();
-  list.sort((a, b) => b.coins - a.coins); // highest coins first
-  list.forEach((p, i) => {
-    const li = document.createElement("li");
-    li.textContent = `${i + 1}. ${p.name}: ${p.coins} | ${p.rank || "None"}`;
-    ul.appendChild(li);
-  });
-}
-
-/* ---------------- CHAT ---------------- */
-const CHAT_URL = "https://68e839b2f2707e6128ca35e1.mockapi.io/chat";
-// Fill this with your app's login logic!
-let username = "YourName"; 
-
-async function fetchChat() {
-  const r = await fetch(CHAT_URL);
-  return await r.json();
-}
-
-async function renderChat() {
-  const chatMessages = document.getElementById("chat-messages");
-  const msgs = await fetchChat();
-  chatMessages.innerHTML = "";
-  msgs.slice(-50).forEach(m => {
-    const div = document.createElement("div");
-    div.textContent = `${m.user}: ${m.text}`;
-    chatMessages.appendChild(div);
-  });
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-document.getElementById("sendChat").onclick = async () => {
-  const input = document.getElementById("chatMessage");
-  const txt = input.value.trim();
-  if (!txt) return;
-  await fetch(CHAT_URL, {
-    method: "POST",
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({user: username, text: txt})
-  });
-  input.value = "";
-  renderChat();
-};
-
-renderChat();
-setInterval(renderChat, 5000);
-  
-/* ---------------- GIVE COINS ---------------- */
+// GIVE COINS
 giveBtn.onclick = async () => {
   if (!username) {
     alert("Login first");
@@ -528,7 +629,24 @@ giveBtn.onclick = async () => {
   alert(`Given ${amt} coins to ${to}`);
 };
 
-/* ---------------- SHOP LOGIC ---------------- */
+// CHAT
+sendChat.onclick = async () => {
+  if (!username) {
+    alert("Login first");
+    return;
+  }
+  const txt = chatInput.value.trim();
+  if (!txt) return;
+  await fetch(CHAT_URL, {
+    method: "POST",
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({user: username, text: txt})
+  });
+  chatInput.value = "";
+  renderChat();
+};
+
+// SHOP LOGIC
 buyVIPBtn.onclick = async () => {
   if (!username) {
     alert("Login first to buy VIP!");
@@ -589,7 +707,6 @@ buyVIPplusplusBtn.onclick = async () => {
   renderLeaderboard();
   alert("You bought VIP++!");
 };
-// LUCK POTION SHOP LOGIC
 buyLuckPotionBtn.onclick = async () => {
   if (!username) {
     alert("Login first to buy Luck Potion!");
@@ -599,16 +716,16 @@ buyLuckPotionBtn.onclick = async () => {
     alert("Not enough coins for Luck Potion!");
     return;
   }
-  if (luckBonus > 0) {
-    alert("You already have an active luck potion!");
+  if (luckTimerActive) {
+    alert("A luck potion is already active!");
     return;
   }
   coins -= 500;
-  luckBonus = 5;
   await updatePlayerOnServer({name: username, password, coins, rank});
   updateInfo();
   renderLeaderboard();
-  alert("Luck Potion +5% activated! Next spin will have better luck.");
+  startLuckTimer(5);
+  alert("Luck Potion +5% activated! Lasts for 5 minutes.");
 };
 buyLuckPotion2Btn.onclick = async () => {
   if (!username) {
@@ -619,23 +736,27 @@ buyLuckPotion2Btn.onclick = async () => {
     alert("Not enough coins for Luck Potion II!");
     return;
   }
-  if (luckBonus > 0) {
-    alert("You already have an active luck potion!");
+  if (luckTimerActive) {
+    alert("A luck potion is already active!");
     return;
   }
   coins -= 1500;
-  luckBonus = 20;
   await updatePlayerOnServer({name: username, password, coins, rank});
   updateInfo();
   renderLeaderboard();
-  alert("Luck Potion II +20% activated! Next spin will have much better luck.");
+  startLuckTimer(20);
+  alert("Luck Potion II +20% activated! Lasts for 5 minutes.");
 };
 
-/* ---------------- INIT ---------------- */
+// INIT
 drawWheel(rotationDeg);
 updateInfo();
 renderLeaderboard();
-loadChat();
+renderChat();
+
+// REFRESH leaderboard/chat every 10s/5s
+setInterval(renderLeaderboard, 10000);
+setInterval(renderChat, 5000);
 
 </script>
 </body>
