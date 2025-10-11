@@ -152,21 +152,7 @@ h2 {
   background: var(--accent);
   color: var(--white);
   cursor: pointer;
-}
-#admin-panel {
-  margin-top: 20px;
-}
-#admin-panel input, #admin-panel button, #admin-panel select {
-  width: 100%;
-  margin-bottom: 8px;
-  padding: 6px;
-  border: none;
-  border-radius: 4px;
-  background: #262636;
-  color: var(--white);
-}
-#adminControls {
-  margin-top: 10px;
+var(--white);
 }
 canvas {
   border: 6px solid var(--white);
@@ -211,26 +197,7 @@ canvas {
       <input id="giveAmount" type="number" placeholder="Amount">
       <button id="giveBtn">Give</button>
     </div>
-
-    <div id="admin-panel">
-      <h2>⚙️ Admin Panel</h2>
-      <input id="adminPass" type="password" placeholder="Admin password">
-      <button id="adminBtn">Login</button>
-
-      <div id="adminControls" style="display:none; flex-direction:column;">
-        <input id="adminCoins" type="number" placeholder="Set coins">
-        <button id="setCoinsBtn">Set Coins</button>
-        <select id="adminRank">
-          <option value="None">None</option>
-          <option value="VIP">VIP</option>
-          <option value="VIP+">VIP+</option>
-          <option value="VIP++">VIP++</option>
-        </select>
-        <button id="setRankBtn">Set Rank</button>
-        <button id="resetUserCoinsBtn">Reset My Coins</button>
-        <button id="resetLeaderboardBtn">Reset Leaderboard</button>
-        <button id="hideAdminBtn">Hide Panel</button>
-      </div>
+       </div>
     </div>
   </div>
 </div>
@@ -266,17 +233,6 @@ const sendChat = document.getElementById("sendChat");
 const giveToUser = document.getElementById("giveToUser");
 const giveAmount = document.getElementById("giveAmount");
 const giveBtn = document.getElementById("giveBtn");
-
-const adminPass = document.getElementById("adminPass");
-const adminBtn = document.getElementById("adminBtn");
-const adminControls = document.getElementById("adminControls");
-const adminCoinsInput = document.getElementById("adminCoins");
-const setCoinsBtn = document.getElementById("setCoinsBtn");
-const adminRankSelect = document.getElementById("adminRank");
-const setRankBtn = document.getElementById("setRankBtn");
-const resetLeaderboardBtn = document.getElementById("resetLeaderboardBtn");
-const hideAdminBtn = document.getElementById("hideAdminBtn");
-const resetUserCoinsBtn = document.getElementById("resetUserCoinsBtn");
 
 /* ---------------- STATE ---------------- */
 let rotationDeg = 0;
@@ -577,60 +533,7 @@ giveBtn.onclick = async () => {
   renderLeaderboard();
   alert(`Given ${amt} coins to ${to}`);
 };
-
-/* ---------------- ADMIN PANEL ---------------- */
-adminBtn.onclick = () => {
-  if (adminPass.value === "") {
-    adminControls.style.display = "flex";
-    adminCoinsInput.value = coins;
-    adminRankSelect.value = rank;
-  } else {
-    alert("Wrong admin password");
-  }
-};
-
-setCoinsBtn.onclick = () => {
-  const v = Math.max(0, Number(adminCoinsInput.value) || 0);
-  coins = v;
-  updatePlayerOnServer({name: username, password, coins, rank});
-  updateInfo();
-  alert("Coins updated");
-};
-
-setRankBtn.onclick = () => {
-  rank = adminRankSelect.value;
-  updatePlayerOnServer({name: username, password, coins, rank});
-  updateInfo();
-  alert("Rank updated");
-};
-
-resetUserCoinsBtn.onclick = () => {
-  coins = 100;
-  updatePlayerOnServer({name: username, password, coins, rank});
-  updateInfo();
-};
-
-resetLeaderboardBtn.onclick = async () => {
-  if (!confirm("Clear leaderboard?")) return;
-  const list = await fetchPlayers();
-  for (const p of list) {
-    await fetch(`${API_URL}/${p.id}`, {method: "DELETE"});
-  }
-  renderLeaderboard();
-  alert("Leaderboard cleared");
-};
-
-hideAdminBtn.onclick = () => {
-  adminControls.style.display = "none";
-};
-
-/* ---------------- AUTOSAVE ---------------- */
-setInterval(() => {
-  if (username) {
-    updatePlayerOnServer({name: username, password, coins, rank});
-  }
-}, 5000);
-
+  
 /* ---------------- INIT ---------------- */
 drawWheel(rotationDeg);
 updateInfo();
