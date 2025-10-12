@@ -5,15 +5,16 @@
   <title>Spin the Wheel — VIP</title>
   <style>
 :root {
-  --bg: #0f0f18;
-  --panel-bg: #1a1a28;
-  --accent: #2d8aee;
-  --yellow: #f1c40f;
+  --bg: #222831;
+  --panel-bg: #222831;
+  --accent: #00ADB5;
+  --yellow: #EEEEEE;
   --purple: #9b59b6;
-  --white: #ffffff;
-  --dark: #0b0b11;
-  --chat-bg: #181826;
+  --white: #EEEEEE;
+  --dark: #393E46;
+  --chat-bg: #222831;
 }
+
 body {
   margin: 0; padding: 0;
   background: var(--bg);
@@ -25,6 +26,7 @@ body {
   height: 100vh;
   overflow: hidden;
 }
+
 #main-container {
   display: flex;
   gap: 20px;
@@ -32,6 +34,7 @@ body {
   width: 100%;
   box-sizing: border-box;
 }
+
 #left-panel, #right-panel {
   background: var(--panel-bg);
   border-radius: 8px;
@@ -42,6 +45,7 @@ body {
   display: flex;
   flex-direction: column;
 }
+
 #center-panel {
   flex: 1;
   display: flex;
@@ -49,9 +53,11 @@ body {
   align-items: center;
   gap: 10px;
 }
+
 h2 {
   margin-top: 0;
 }
+
 #leaderboardList {
   flex: 0 1 auto;
   overflow-y: auto;
@@ -59,15 +65,18 @@ h2 {
   list-style: none;
   margin: 0;
 }
+
 #leaderboardList li {
   margin: 6px 0;
 }
+
 #chat-box {
   margin-top: 20px;
   flex: 1;
   display: flex;
   flex-direction: column;
 }
+
 #chat-messages {
   background: var(--chat-bg);
   flex: 1;
@@ -76,22 +85,26 @@ h2 {
   overflow-y: auto;
   height: 140px;
 }
+
 #chat-input-area {
   display: flex;
   gap: 6px;
   margin-top: 8px;
 }
+
 #chatMessage {
   flex: 1;
   padding: 6px;
   border-radius: 4px;
   border: none;
-  background: #262636;
+  background: var(--dark);
   color: var(--white);
 }
+
 #chatMessage:focus {
   outline: 2px solid var(--accent);
 }
+
 #sendChat {
   padding: 6px 12px;
   background: var(--accent);
@@ -100,35 +113,39 @@ h2 {
   cursor: pointer;
   border-radius: 4px;
 }
+
 #give-coins input {
   width: 100%;
   margin-bottom: 8px;
   padding: 6px;
   border: none;
   border-radius: 4px;
-  background: #262636;
+  background: var(--dark);
   color: var(--white);
 }
+
 #wheel-pointer {
   font-size: 36px;
-  color: #f1c40f;
+  color: var(--accent);
   position: relative;
   top: -450px;
   text-align: center;
   transform: rotate(180deg);
   pointer-events: none;
-  text-shadow: 0 0 10px #f1c40f;
+  text-shadow: 0 0 10px var(--accent);
 }
+
 #giveBtn {
   width: 100%;
   padding: 8px;
-  background: var(--yellow);
+  background: var(--accent);
   border: none;
-  color: var(--dark);
+  color: var(--white);
   font-weight: bold;
   cursor: pointer;
   border-radius: 4px;
 }
+
 #controls {
   background: var(--panel-bg);
   padding: 12px;
@@ -139,26 +156,31 @@ h2 {
   width: 100%;
   box-sizing: border-box;
 }
+
 #controls input, #controls button {
   padding: 8px;
   border: none;
   border-radius: 4px;
   font-size: 14px;
 }
+
 #controls input {
-  background: #262636;
+  background: var(--dark);
   color: var(--white);
 }
+
 #controls button {
   background: var(--accent);
   color: var(--white);
   cursor: pointer;
 }
+
 canvas {
   border: 6px solid var(--white);
   border-radius: 50%;
   background: var(--dark);
 }
+
 #shop {
   margin-top: 30px;
   background: var(--panel-bg);
@@ -168,15 +190,18 @@ canvas {
   flex-direction: column;
   gap: 12px;
 }
+
 #shop h2 {
   margin-bottom: 12px;
 }
+
 .shop-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
 }
+
 .shop-item button {
   background: var(--accent);
   color: var(--white);
@@ -186,18 +211,21 @@ canvas {
   font-weight: bold;
   cursor: pointer;
 }
+
 .shop-item .vip-label {
   font-weight: bold;
 }
-.shop-item .vip-label.vip { color: var(--yellow); }
-.shop-item .vip-label.vip-plus { color: var(--yellow); }
-.shop-item .vip-label.vip-plusplus { color: var(--purple); }
-.shop-item .vip-label.luck { color: #2ecc71; }
+
+.shop-item .vip-label.vip { color: #ffe066; }
+.shop-item .vip-label.vip-plus { color: #f1c40f; }
+.shop-item .vip-label.vip-plusplus { color: #9b59b6; }
+.shop-item .vip-label.luck { color: #00ADB5; }
 .shop-item .vip-label.stealer { color: orange; }
+
 #luck-timer {
   font-size: 13px;
   font-weight: normal;
-  color: #2ecc71;
+  color: #00ADB5;
   margin-left: 8px;
 }
   </style>
