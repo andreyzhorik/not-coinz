@@ -531,16 +531,12 @@ spinBtn.onclick = () => {
     alert("Invalid bet");
     return;
   }
-  coins -= bet;
-  updateInfo();
-  spinning = true;
-}
   if (result !== "Lose") {
   const mult = parseFloat(result.replace("x", ""));
   if (!Number.isNaN(mult)) {
     win = Math.floor(bet * mult);
     // Announce for big wins
-    if (mult >= 5 || win >= 100000) {
+    if (mult >= 5 || win >= 1000) {
       fetch(CHAT_URL, {
         method: "POST",
         headers: {'Content-Type':'application/json'},
@@ -551,6 +547,10 @@ spinBtn.onclick = () => {
       });
     }
   }
+}
+  coins -= bet;
+  updateInfo();
+  spinning = true;
 }
 
   // LUCK BONUS LOGIC
