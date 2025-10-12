@@ -5,20 +5,21 @@
   <title>Spin the Wheel — VIP</title>
   <style>
 :root {
-  --bg: #222831;
-  --panel-bg: #393E46;
-  --accent: #00ADB5;
-  --yellow: #EEEEEE;
+  --bg: #110E07;
+  --panel-bg: #1D1D1D;
+  --accent: #DBC458;
+  --yellow: #8B681F;
+  --green: #00ADB5; /* For luck potion II text */
   --purple: #9b59b6;
-  --white: #EEEEEE;
-  --dark: #393E46;
-  --chat-bg: #393E46;
+  --white: #DBC458;
+  --dark: #8B681F;
+  --chat-bg: #1D1D1D;
 }
 
 body {
   margin: 0; padding: 0;
   background: var(--bg);
-  color: var(--white);
+  color: var(--yellow);
   font-family: Arial, sans-serif;
   display: flex;
   justify-content: center;
@@ -41,11 +42,9 @@ body {
   border-radius: 12px;
   padding: 15px;
   box-sizing: border-box;
-  /* Add a little shadow for depth */
-  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.10);
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.15);
 }
 
-/* Center panel stays transparent but controls are boxed */
 #center-panel {
   flex: 1;
   display: flex;
@@ -56,6 +55,7 @@ body {
 
 h2 {
   margin-top: 0;
+  color: var(--yellow);
 }
 
 #leaderboardList {
@@ -84,6 +84,7 @@ h2 {
   padding: 10px;
   overflow-y: auto;
   height: 140px;
+  color: var(--yellow);
 }
 
 #chat-input-area {
@@ -98,7 +99,7 @@ h2 {
   border-radius: 4px;
   border: none;
   background: var(--dark);
-  color: var(--white);
+  color: var(--yellow);
 }
 
 #chatMessage:focus {
@@ -109,7 +110,7 @@ h2 {
   padding: 6px 12px;
   background: var(--accent);
   border: none;
-  color: var(--white);
+  color: #1D1D1D;
   cursor: pointer;
   border-radius: 4px;
 }
@@ -121,7 +122,7 @@ h2 {
   border: none;
   border-radius: 4px;
   background: var(--dark);
-  color: var(--white);
+  color: var(--yellow);
 }
 
 #wheel-pointer {
@@ -140,7 +141,7 @@ h2 {
   padding: 8px;
   background: var(--accent);
   border: none;
-  color: var(--white);
+  color: #1D1D1D;
   font-weight: bold;
   cursor: pointer;
   border-radius: 4px;
@@ -155,17 +156,17 @@ h2 {
 
 #controls input {
   background: var(--dark);
-  color: var(--white);
+  color: var(--yellow);
 }
 
 #controls button {
   background: var(--accent);
-  color: var(--white);
+  color: #1D1D1D;
   cursor: pointer;
 }
 
 canvas {
-  border: 6px solid var(--white);
+  border: 6px solid var(--accent);
   border-radius: 50%;
   background: var(--dark);
 }
@@ -179,6 +180,7 @@ canvas {
 
 #shop h2 {
   margin-bottom: 12px;
+  color: var(--yellow);
 }
 
 .shop-item {
@@ -190,7 +192,7 @@ canvas {
 
 .shop-item button {
   background: var(--accent);
-  color: var(--white);
+  color: #1D1D1D;
   border: none;
   border-radius: 4px;
   padding: 6px 14px;
@@ -206,6 +208,7 @@ canvas {
 .shop-item .vip-label.vip-plus { color: #f1c40f; }
 .shop-item .vip-label.vip-plusplus { color: #9b59b6; }
 .shop-item .vip-label.luck { color: #00ADB5; }
+.shop-item .vip-label.luck-II { color: var(--green); }
 .shop-item .vip-label.stealer { color: orange; }
 
 #luck-timer {
