@@ -652,41 +652,67 @@ giveBtn.onclick = async () => {
 };
 
 // CHAT (supports private messages with "/w username message")
-sendChat.onclick = async () => {
-  if (!username) {
-    alert("Login first");
-    return;
-  }
-  const txt = chatInput.value.trim();
-  if (!txt) return;
-  if (txt.startsWith("/w ")) {
-    // Private message
-    const match = txt.match(/^\/w\s+(\S+)\s+(.+)/);
-    if (match) {
-      const toUser = match[1];
-      const message = match[2];
-      await fetch(CHAT_URL, {
-        method: "POST",
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({user: username, to: toUser, text: message})
-      });
-      chatInput.value = "";
-      renderChat();
+async function renderChat() {
+  const msgs = await fetchChat();
+  const players = await fetchPlayers(); // For ranks
+  chatMessages.innerHTML = "";
+  msgs.slice(-50).forEach(m => {
+    // Private message: Only show if current user is sender or recipient
+    if (m.to && m.to !== username && m.user !== username) {
+      // Not for you, skip!
       return;
     }
-  }
-  await fetch(CHAT_URL, {
-    method: "POST",
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({user: username, text: txt})
+
+    const div = document.createElement("div");
+
+    // Private message style
+    if (m.to) {
+      div.style.background = "#282842";
+      div.style.color = "#2ecc71";
+      div.style.fontStyle = "italic";
+      div.textContent = `[PM] ${m.user} → ${m.to}: ${m.text}`;
+      chatMessages.appendChild(div);
+      return;
+    }
+
+    // Announcement
+    if (m.user === "ANNOUNCEMENT") {
+      div.style.color = "#f1c40f";
+      div.style.fontWeight = "bold";
+      div.textContent = `🔔 ${m.text}`;
+      chatMessages.appendChild(div);
+      return;
+    }
+
+    // Get rank for color
+    let color = "#fff";
+    let fontWeight = "normal";
+    const userObj = players.find(p => p.name === m.user);
+    if (userObj) {
+      if (userObj.rank === "VIP") {
+        color = "#ffe066";
+        fontWeight = "bold";
+      } else if (userObj.rank === "VIP+") {
+        color = "#f1c40f";
+        fontWeight = "bold";
+      } else if (userObj.rank === "VIP++") {
+        color = "#9b59b6";
+        fontWeight = "bold";
+      }
+    }
+
+    // Render user/rank
+    const span = document.createElement("span");
+    span.textContent = `${m.user}: `;
+    span.style.color = color;
+    span.style.fontWeight = fontWeight;
+    div.appendChild(span);
+    div.appendChild(document.createTextNode(m.text));
+    chatMessages.appendChild(div);
   });
-  chatInput.value = "";
-  renderChat();
-};
-
-renderChat();
-setInterval(renderChat, 5000);
-
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+  
 // SHOP LOGIC
 buyVIPBtn.onclick = async () => {
   if (!username) {
