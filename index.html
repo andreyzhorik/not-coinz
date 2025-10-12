@@ -258,6 +258,11 @@ canvas {
         <button id="buyLuckPotion2">Buy for 1500</button>
         <span id="luck-timer-20"></span>
       </div>
+      <div class="shop-item">
+  <span class="vip-label" style="color:orange;">💰the stealer</span>
+  <input id="stealTarget" type="text" placeholder="Target username" style="width:90px;">
+  <button id="buyStealer">Use for 2000</button>
+      </div>
     </div>
   </div>
 </div>
@@ -649,6 +654,25 @@ sendChat.onclick = async () => {
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({user: username, text: txt})
   });
+  // Optional: global chat announcement
+      fetch(CHAT_URL, {
+        method: "POST",
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          user: "ANNOUNCEMENT",
+          text: `${username} just stole ${stealAmount} coins from ${targetName} using 💰the stealer!`
+        })
+      });
+    } else {
+      alert("Target doesn't have enough coins to steal from!");
+    }
+  } else {
+    alert("Steal failed! Better luck next time.");
+  }
+  await updatePlayerOnServer({name: username, password, coins, rank});
+  updateInfo();
+  renderLeaderboard();
+};
   chatInput.value = "";
   renderChat();
 };
@@ -757,6 +781,39 @@ buyLuckPotion2Btn.onclick = async () => {
   startLuckTimer(20);
   alert("Luck Potion II +20% activated! Lasts for 5 minutes.");
 };
+  const buyStealerBtn = document.getElementById("buyStealer");
+const stealTargetInput = document.getElementById("stealTarget");
+
+buyStealerBtn.onclick = async () => {
+  if (!username) {
+    alert("Login first to use The Stealer!");
+    return;
+  }
+  if (coins < 2000) {
+    alert("Not enough coins for The Stealer!");
+    return;
+  }
+  const targetName = stealTargetInput.value.trim();
+  if (!targetName || targetName === username) {
+    alert("Enter a valid username to steal from (not yourself)!");
+    return;
+  }
+  const players = await fetchPlayers();
+  const target = players.find(p => p.name === targetName);
+  if (!target) {
+    alert("Target user not found!");
+    return;
+  }
+  coins -= 2000;
+
+  // Steal logic: 25% chance
+  if (Math.random() < 0.25) {
+    const stealAmount = Math.floor(target.coins * 0.10);
+    if (stealAmount > 0) {
+      coins += stealAmount;
+      target.coins -= stealAmount;
+      await updatePlayerOnServer(target);
+      alert(`Success! You stole ${stealAmount} coins from ${targetName}.`);
 
 // INIT
 drawWheel(rotationDeg);
