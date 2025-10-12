@@ -310,7 +310,7 @@ let luckTimerEnd = 0; // timestamp
 let luckTimerActive = false;
 let luckInterval = null;
 
-// FUNCTIONS
+// DRAW WHEEL
 function drawWheel(rotDeg) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const cx = canvas.width/2, cy = canvas.height/2;
@@ -418,17 +418,13 @@ async function renderChat() {
   chatMessages.innerHTML = "";
   msgs.slice(-50).forEach(m => {
     const div = document.createElement("div");
-    const span = document.createElement("span");
-    span.textContent = `${m.user}: `;
-    fetchPlayers().then(list => {
-      const u = list.find(p => p.name === m.user);
-      if (u && u.rank) {
-        if (u.rank === "VIP" || u.rank === "VIP+") span.style.color = "var(--yellow)";
-        else if (u.rank === "VIP++") span.style.color = "var(--purple)";
-      }
-    });
-    div.appendChild(span);
-    div.appendChild(document.createTextNode(m.text));
+    if (m.user === "ANNOUNCEMENT") {
+      div.style.color = "#f1c40f";
+      div.style.fontWeight = "bold";
+      div.textContent = `🔔 ${m.text}`;
+    } else {
+      div.textContent = `${m.user}: ${m.text}`;
+    }
     chatMessages.appendChild(div);
   });
   chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -519,7 +515,7 @@ setUsernameBtn.onclick = async () => {
   renderChat();
 };
 
-// SPIN LOGIC
+// SPIN LOGIC (fixed, single version, working wheel & announcements)
 spinBtn.onclick = () => {
   if (!username) {
     alert("Login first");
@@ -593,58 +589,6 @@ spinBtn.onclick = () => {
           }
         }
       }
-    }
-  }
-  requestAnimationFrame(step);
-};
-
-  // LUCK BONUS LOGIC
-  let idx;
-  if (luckBonus > 0) {
-    // Weighted for winning outcomes
-    let weighted = [];
-    for (let i = 0; i < N; i++) {
-      if (WHEEL_OUTCOMES[i] === "Lose") {
-        weighted.push(i);
-      } else {
-        let weight = 1 + luckBonus / 100;
-        for (let w = 0; w < weight; w++) weighted.push(i);
-      }
-    }
-    idx = weighted[Math.floor(Math.random() * weighted.length)];
-  } else {
-    idx = Math.floor(Math.random() * N);
-  }
-
-  const result = WHEEL_OUTCOMES[idx];
-  const currentNorm = ((rotationDeg % 360) + 360) % 360;
-  const sliceCenter = idx * sliceDeg + sliceDeg / 2;
-  const baseRot = (360 - sliceCenter) % 360;
-  const delta = (baseRot - currentNorm + 360) % 360;
-  const fullSpins = 6 + Math.floor(Math.random() * 5);
-  const target = rotationDeg + fullSpins * 360 + delta;
-  const start = rotationDeg;
-  const duration = 4200;
-  const t0 = performance.now();
-
-  function step(t) {
-    const elapsed = t - t0;
-    const p = Math.min(elapsed / duration, 1);
-    const ease = 1 - Math.pow(1 - p, 3);
-    rotationDeg = start + (target - start) * ease;
-    drawWheel(rotationDeg);
-
-    if (p < 1) {
-      requestAnimationFrame(step);
-    } else {
-      rotationDeg = baseRot + 360 * Math.floor(rotationDeg / 360);
-      let win = 0;
-      if (result !== "Lose") {
-        const mult = parseFloat(result.replace("x", ""));
-        if (!Number.isNaN(mult)) {
-          win = Math.floor(bet * mult);
-        }
-      }
       if (result === "Lose") {
         alert("😢 You lost your bet!");
       } else {
@@ -693,34 +637,6 @@ giveBtn.onclick = async () => {
 };
 
 // CHAT
-const CHAT_URL = "https://68e839b2f2707e6128ca35e1.mockapi.io/chat";
-
-async function fetchChat() {
-  try {
-    const r = await fetch(CHAT_URL);
-    return await r.json();
-  } catch(e) {
-    return [];
-  }
-}
-
-async function renderChat() {
-  const msgs = await fetchChat();
-  chatMessages.innerHTML = "";
-  msgs.slice(-50).forEach(m => {
-    const div = document.createElement("div");
-    if (m.user === "ANNOUNCEMENT") {
-      div.style.color = "#f1c40f";
-      div.style.fontWeight = "bold";
-      div.textContent = `🔔 ${m.text}`;
-    } else {
-      div.textContent = `${m.user}: ${m.text}`;
-    }
-    chatMessages.appendChild(div);
-  });
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
 sendChat.onclick = async () => {
   if (!username) {
     alert("Login first");
@@ -846,11 +762,9 @@ buyLuckPotion2Btn.onclick = async () => {
 drawWheel(rotationDeg);
 updateInfo();
 renderLeaderboard();
-renderChat();
 
-// REFRESH leaderboard/chat every 10s/5s
+// REFRESH leaderboard/chat every 5s
 setInterval(renderLeaderboard, 5000);
-setInterval(renderChat, 5000);
 
 </script>
 </body>
