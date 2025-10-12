@@ -531,31 +531,72 @@ spinBtn.onclick = () => {
     alert("Invalid bet");
     return;
   }
-  if (result !== "Lose") {
-  const mult = parseFloat(result.replace("x", ""));
-  }
-  if (result !== "Lose") {
-  const mult = parseFloat(result.replace("x", ""));
-  if (!Number.isNaN(mult)) {
-    win = Math.floor(bet * mult);
-    // Announce for big wins
-    if (mult >= 5 || win >= 1000) {
-      fetch(CHAT_URL, {
-        method: "POST",
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-          user: "ANNOUNCEMENT",
-          text: `${username} JUST WON ${win} COINS WITH A ${result} SPIN!`
-        })
-      });
-    }
-  }
-}
-}
   coins -= bet;
   updateInfo();
   spinning = true;
+
+  // Luck bonus logic if used
+  let idx;
+  if (luckBonus > 0) {
+    let weighted = [];
+    for (let i = 0; i < N; i++) {
+      if (WHEEL_OUTCOMES[i] === "Lose") {
+        weighted.push(i);
+      } else {
+        let weight = 1 + luckBonus / 100;
+        for (let w = 0; w < weight; w++) weighted.push(i);
+      }
+    }
+    idx = weighted[Math.floor(Math.random() * weighted.length)];
+  } else {
+    idx = Math.floor(Math.random() * N);
   }
+
+  const result = WHEEL_OUTCOMES[idx];
+  const currentNorm = ((rotationDeg % 360) + 360) % 360;
+  const sliceCenter = idx * sliceDeg + sliceDeg / 2;
+  const baseRot = (360 - sliceCenter) % 360;
+  const delta = (baseRot - currentNorm + 360) % 360;
+  const fullSpins = 6 + Math.floor(Math.random() * 5);
+  const target = rotationDeg + fullSpins * 360 + delta;
+  const start = rotationDeg;
+  const duration = 4200;
+  const t0 = performance.now();
+
+  function step(t) {
+    const elapsed = t - t0;
+    const p = Math.min(elapsed / duration, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    rotationDeg = start + (target - start) * ease;
+    drawWheel(rotationDeg);
+
+    if (p < 1) {
+      requestAnimationFrame(step);
+    } else {
+      rotationDeg = baseRot + 360 * Math.floor(rotationDeg / 360);
+      let win = 0;
+      let mult = 0;
+      if (result !== "Lose") {
+        mult = parseFloat(result.replace("x", ""));
+        if (!Number.isNaN(mult)) {
+          win = Math.floor(bet * mult);
+          // GLOBAL ANNOUNCEMENT FOR BIG WINS!
+          if (mult >= 5 || win >= 1000) {
+            fetch(CHAT_URL, {
+              method: "POST",
+              headers: {'Content-Type':'application/json'},
+              body: JSON.stringify({
+                user: "ANNOUNCEMENT",
+                text: `${username} JUST WON ${win} COINS WITH A ${result} SPIN!`
+              })
+            });
+          }
+        }
+      }
+    }
+  }
+  requestAnimationFrame(step);
+};
 
   // LUCK BONUS LOGIC
   let idx;
@@ -652,6 +693,34 @@ giveBtn.onclick = async () => {
 };
 
 // CHAT
+const CHAT_URL = "https://68e839b2f2707e6128ca35e1.mockapi.io/chat";
+
+async function fetchChat() {
+  try {
+    const r = await fetch(CHAT_URL);
+    return await r.json();
+  } catch(e) {
+    return [];
+  }
+}
+
+async function renderChat() {
+  const msgs = await fetchChat();
+  chatMessages.innerHTML = "";
+  msgs.slice(-50).forEach(m => {
+    const div = document.createElement("div");
+    if (m.user === "ANNOUNCEMENT") {
+      div.style.color = "#f1c40f";
+      div.style.fontWeight = "bold";
+      div.textContent = `🔔 ${m.text}`;
+    } else {
+      div.textContent = `${m.user}: ${m.text}`;
+    }
+    chatMessages.appendChild(div);
+  });
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
 sendChat.onclick = async () => {
   if (!username) {
     alert("Login first");
@@ -664,14 +733,12 @@ sendChat.onclick = async () => {
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({user: username, text: txt})
   });
-  
-  if (m.user === "ANNOUNCEMENT") {
-  div.style.color = "#f1c40f";
-  div.style.fontWeight = "bold";
-}
   chatInput.value = "";
   renderChat();
 };
+
+renderChat();
+setInterval(renderChat, 5000);
 
 // SHOP LOGIC
 buyVIPBtn.onclick = async () => {
