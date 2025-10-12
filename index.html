@@ -363,8 +363,9 @@ function updateInfo() {
   info.textContent = username
     ? `${username}: ${coins} | ${rank}`
     : "Not logged in";
-  if (rank === "VIP" || rank === "VIP+") info.style.color = "var(--yellow)";
-  else if (rank === "VIP++") info.style.color = "var(--purple)";
+  if (rank === "VIP") info.style.color = "#ffe066";
+  else if (rank === "VIP+") info.style.color = "#f1c40f";
+  else if (rank === "VIP++") info.style.color = "#9b59b6";
   else info.style.color = "white";
 }
 
@@ -401,13 +402,13 @@ async function renderLeaderboard() {
   const list = await fetchPlayers();
   list.sort((a, b) => b.coins - a.coins);
   list.slice(0, MAX_USERS).forEach((p, i) => {
+    let color = "#fff";
+    if (p.rank === "VIP") color = "#ffe066";
+    else if (p.rank === "VIP+") color = "#f1c40f";
+    else if (p.rank === "VIP++") color = "#9b59b6";
+    const nameSpan = `<span style="color:${color};font-weight:bold;">${p.name}</span>`;
     const li = document.createElement("li");
-    li.textContent = `${i + 1}. ${p.name}: ${p.coins} | ${p.rank || "None"}`;
-    if (p.rank === "VIP" || p.rank === "VIP+") {
-      li.style.color = "var(--yellow)";
-    } else if (p.rank === "VIP++") {
-      li.style.color = "var(--purple)";
-    }
+    li.innerHTML = `${i + 1}. ${nameSpan}: ${p.coins} | ${p.rank || "None"}`;
     ul.appendChild(li);
   });
 }
@@ -423,22 +424,50 @@ async function fetchChat() {
 
 async function renderChat() {
   const msgs = await fetchChat();
+  const players = await fetchPlayers(); // For ranks
   chatMessages.innerHTML = "";
   msgs.slice(-50).forEach(m => {
     const div = document.createElement("div");
+    // Private message (PM)
     if (m.to && (m.to === username || m.user === username)) {
-      // Private message, only visible to sender and receiver
       div.style.background = "#282842";
       div.style.color = "#2ecc71";
       div.style.fontStyle = "italic";
       div.textContent = `[PM] ${m.user} → ${m.to}: ${m.text}`;
-    } else if (m.user === "ANNOUNCEMENT") {
+      chatMessages.appendChild(div);
+      return;
+    }
+    // Announcement
+    if (m.user === "ANNOUNCEMENT") {
       div.style.color = "#f1c40f";
       div.style.fontWeight = "bold";
       div.textContent = `🔔 ${m.text}`;
-    } else if (!m.to) {
-      div.textContent = `${m.user}: ${m.text}`;
+      chatMessages.appendChild(div);
+      return;
     }
+    // Get rank for color
+    let color = "#fff";
+    let fontWeight = "normal";
+    const userObj = players.find(p => p.name === m.user);
+    if (userObj) {
+      if (userObj.rank === "VIP") {
+        color = "#ffe066";
+        fontWeight = "bold";
+      } else if (userObj.rank === "VIP+") {
+        color = "#f1c40f";
+        fontWeight = "bold";
+      } else if (userObj.rank === "VIP++") {
+        color = "#9b59b6";
+        fontWeight = "bold";
+      }
+    }
+    // Render user/rank
+    const span = document.createElement("span");
+    span.textContent = `${m.user}: `;
+    span.style.color = color;
+    span.style.fontWeight = fontWeight;
+    div.appendChild(span);
+    div.appendChild(document.createTextNode(m.text));
     chatMessages.appendChild(div);
   });
   chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -529,7 +558,7 @@ setUsernameBtn.onclick = async () => {
   renderChat();
 };
 
-// SPIN LOGIC (fixed, single version, working wheel & announcements)
+// SPIN LOGIC
 spinBtn.onclick = () => {
   if (!username) {
     alert("Login first");
@@ -651,61 +680,42 @@ giveBtn.onclick = async () => {
 };
 
 // CHAT (supports private messages with "/w username message")
-async function renderChat() {
-  const msgs = await fetchChat();
-  const players = await fetchPlayers(); // Get all ranks at once
-  chatMessages.innerHTML = "";
-  msgs.slice(-50).forEach(m => {
-    const div = document.createElement("div");
-
-    // Private message (PM)
-    if (m.to && (m.to === username || m.user === username)) {
-      div.style.background = "#282842";
-      div.style.color = "#2ecc71";
-      div.style.fontStyle = "italic";
-      div.textContent = `[PM] ${m.user} → ${m.to}: ${m.text}`;
-      chatMessages.appendChild(div);
+sendChat.onclick = async () => {
+  if (!username) {
+    alert("Login first");
+    return;
+  }
+  const txt = chatInput.value.trim();
+  if (!txt) return;
+  if (txt.startsWith("/w ")) {
+    // Private message
+    const match = txt.match(/^\/w\s+(\S+)\s+(.+)/);
+    if (match) {
+      const toUser = match[1];
+      const message = match[2];
+      await fetch(CHAT_URL, {
+        method: "POST",
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({user: username, to: toUser, text: message})
+      });
+      chatInput.value = "";
+      renderChat();
       return;
     }
-
-    // Announcement
-    if (m.user === "ANNOUNCEMENT") {
-      div.style.color = "#f1c40f";
-      div.style.fontWeight = "bold";
-      div.textContent = `🔔 ${m.text}`;
-      chatMessages.appendChild(div);
-      return;
-    }
-
-    // Get rank for color
-    let color = "#fff";
-    let fontWeight = "normal";
-    const userObj = players.find(p => p.name === m.user);
-    if (userObj) {
-      if (userObj.rank === "VIP") {
-        color = "#ffe066"; // lighter yellow
-        fontWeight = "bold";
-      } else if (userObj.rank === "VIP+") {
-        color = "#f1c40f"; // darker gold
-        fontWeight = "bold";
-      } else if (userObj.rank === "VIP++") {
-        color = "#9b59b6"; // purple
-        fontWeight = "bold";
-      }
-    }
-
-    // Render user/rank
-    const span = document.createElement("span");
-    span.textContent = `${m.user}: `;
-    span.style.color = color;
-    span.style.fontWeight = fontWeight;
-    div.appendChild(span);
-    div.appendChild(document.createTextNode(m.text));
-    chatMessages.appendChild(div);
+  }
+  await fetch(CHAT_URL, {
+    method: "POST",
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({user: username, text: txt})
   });
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-  // SHOP LOGIC
+  chatInput.value = "";
+  renderChat();
+};
+
+renderChat();
+setInterval(renderChat, 5000);
+
+// SHOP LOGIC
 buyVIPBtn.onclick = async () => {
   if (!username) {
     alert("Login first to buy VIP!");
@@ -861,8 +871,10 @@ buyStealerBtn.onclick = async () => {
 drawWheel(rotationDeg);
 updateInfo();
 renderLeaderboard();
+renderChat();
 
 setInterval(renderLeaderboard, 5000);
+setInterval(renderChat, 5000);
 
 </script>
 </body>
