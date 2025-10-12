@@ -8,8 +8,9 @@
   --bg: #110E07;
   --panel-bg: #1D1D1D;
   --accent: #DBC458;
-  --yellow: #8B681F;
-  --green: #0f990c; /* Luck Potion II text */
+  --yellow: #FFE066;      /* lighter yellow for general text */
+  --rank-yellow: #8B681F; /* for ranks (VIP etc) */
+  --green: #0f990c;       /* Luck Potion II text */
   --purple: #9b59b6;
   --white: #EEEEEE;
   --dark: #8B681F;
@@ -19,7 +20,7 @@
 body {
   margin: 0; padding: 0;
   background: var(--bg);
-  color: var(--yellow);
+  color: var(--yellow); /* lighter yellow for most text */
   font-family: Arial, sans-serif;
   display: flex;
   justify-content: center;
@@ -42,6 +43,7 @@ body {
   padding: 15px;
   box-sizing: border-box;
   box-shadow: 0 2px 12px 0 rgba(0,0,0,0.15);
+  color: var(--yellow); /* lighter yellow for panel text */
 }
 
 #center-panel {
@@ -50,6 +52,7 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 10px;
+  color: var(--yellow); /* lighter yellow for center panel */
 }
 
 h2 {
@@ -67,6 +70,7 @@ h2 {
 
 #leaderboardList li {
   margin: 6px 0;
+  color: var(--yellow); /* lighter yellow for list */
 }
 
 #chat-box {
@@ -74,6 +78,7 @@ h2 {
   display: flex;
   flex-direction: column;
   margin-top: 20px;
+  color: var(--yellow); /* lighter yellow for chat */
 }
 
 #chat-messages {
@@ -83,7 +88,7 @@ h2 {
   padding: 10px;
   overflow-y: auto;
   height: 140px;
-  color: var(--yellow);
+  color: var(--yellow); /* lighter yellow for chat messages */
 }
 
 #chat-input-area {
@@ -92,36 +97,29 @@ h2 {
   margin-top: 8px;
 }
 
-#chatMessage {
-  flex: 1;
-  padding: 6px;
-  border-radius: 4px;
-  border: none;
+/* Text boxes - keep text white */
+#chatMessage,
+#give-coins input,
+#controls input {
+  color: var(--white);
   background: var(--dark);
-  color: var(--white); /* Text inside text boxes is now white */
+  border: none;
+  border-radius: 4px;
+  padding: 6px;
 }
 
-#chatMessage:focus {
-  outline: 2px solid var(--accent);
-}
-
-#sendChat {
-  padding: 6px 12px;
+/* Buttons */
+#sendChat,
+#giveBtn,
+#controls button,
+.shop-item button {
   background: var(--accent);
-  border: none;
   color: #1D1D1D;
+  border-radius: 4px;
+  font-weight: bold;
   cursor: pointer;
-  border-radius: 4px;
-}
-
-#give-coins input {
-  width: 100%;
-  margin-bottom: 8px;
-  padding: 6px;
   border: none;
-  border-radius: 4px;
-  background: var(--dark);
-  color: var(--white); /* Text inside give coins input is now white */
+  padding: 6px 12px;
 }
 
 #wheel-pointer {
@@ -135,91 +133,43 @@ h2 {
   text-shadow: 0 0 10px var(--accent);
 }
 
-#giveBtn {
-  width: 100%;
-  padding: 8px;
-  background: var(--accent);
-  border: none;
-  color: #1D1D1D;
-  font-weight: bold;
-  cursor: pointer;
-  border-radius: 4px;
-}
-
-#controls input, #controls button {
-  padding: 8px;
-  border: none;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-#controls input {
-  background: var(--dark);
-  color: var(--white); /* Text inside controls input is now white */
-}
-
-#controls button {
-  background: var(--accent);
-  color: #1D1D1D;
-  cursor: pointer;
-}
-
 canvas {
   border: 6px solid var(--accent);
   border-radius: 50%;
   background: var(--dark);
 }
 
+/* Shop area and ranks */
 #shop {
   margin-top: 30px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  color: var(--yellow); /* lighter yellow for shop text */
 }
 
+/* Shop labels and ranks: use custom colors */
+.shop-item .vip-label {
+  font-weight: bold;
+  color: var(--rank-yellow); /* darker yellow for ranks (VIP etc) */
+}
+.shop-item .vip-label.vip { color: var(--rank-yellow); }
+.shop-item .vip-label.vip-plus { color: #f1c40f; }
+.shop-item .vip-label.vip-plusplus { color: #9b59b6; }
+.shop-item .vip-label.luck,
+.shop-item .vip-label.luck-II { color: #0f990c !important; }
+.shop-item .vip-label.stealer { color: orange; }
+
+/* Shop h2 stays lighter yellow */
 #shop h2 {
   margin-bottom: 12px;
   color: var(--yellow);
 }
 
-.shop-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.shop-item button {
-  background: var(--accent);
-  color: #1D1D1D;
-  border: none;
-  border-radius: 4px;
-  padding: 6px 14px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.shop-item .vip-label {
-  font-weight: bold;
-}
-
-.shop-item .vip-label.vip { color: #ffe066; }
-.shop-item .vip-label.vip-plus { color: #f1c40f; }
-.shop-item .vip-label.vip-plusplus { color: #9b59b6; }
-.shop-item .vip-label.luck { color: #0f990c; }
-.shop-item .vip-label.luck-II { color: #0f990c; }
-.shop-item .vip-label.stealer { color: orange; }
-
-/* Luck Potion II text green fix (target by class or ID as needed) */
-.shop-item .vip-label.luck-II,
-.shop-item .vip-label.luck-II span {
-  color: var(--green) !important;
-}
-
 #luck-timer {
   font-size: 13px;
   font-weight: normal;
-  color: #00ADB5;
+  color: #0f990c;
   margin-left: 8px;
 }
   </style>
