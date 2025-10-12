@@ -534,6 +534,24 @@ spinBtn.onclick = () => {
   coins -= bet;
   updateInfo();
   spinning = true;
+}
+  if (result !== "Lose") {
+  const mult = parseFloat(result.replace("x", ""));
+  if (!Number.isNaN(mult)) {
+    win = Math.floor(bet * mult);
+    // Announce for big wins
+    if (mult >= 5 || win >= 100000) {
+      fetch(CHAT_URL, {
+        method: "POST",
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          user: "ANNOUNCEMENT",
+          text: `${username} JUST WON ${win} COINS WITH A ${result} SPIN!`
+        })
+      });
+    }
+  }
+}
 
   // LUCK BONUS LOGIC
   let idx;
@@ -642,6 +660,11 @@ sendChat.onclick = async () => {
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({user: username, text: txt})
   });
+  
+  if (m.user === "ANNOUNCEMENT") {
+  div.style.color = "#f1c40f";
+  div.style.fontWeight = "bold";
+}
   chatInput.value = "";
   renderChat();
 };
