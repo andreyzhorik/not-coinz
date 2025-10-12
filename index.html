@@ -301,6 +301,8 @@ const buyLuckPotionBtn = document.getElementById("buyLuckPotion");
 const buyLuckPotion2Btn = document.getElementById("buyLuckPotion2");
 const luckTimer5 = document.getElementById("luck-timer-5");
 const luckTimer20 = document.getElementById("luck-timer-20");
+const buyStealerBtn = document.getElementById("buyStealer");
+const stealTargetInput = document.getElementById("stealTarget");
 
 // STATE
 let rotationDeg = 0;
@@ -673,10 +675,7 @@ sendChat.onclick = async () => {
   updateInfo();
   renderLeaderboard();
 };
-  chatInput.value = "";
-  renderChat();
-};
-
+  
 renderChat();
 setInterval(renderChat, 5000);
 
@@ -781,9 +780,6 @@ buyLuckPotion2Btn.onclick = async () => {
   startLuckTimer(20);
   alert("Luck Potion II +20% activated! Lasts for 5 minutes.");
 };
-  const buyStealerBtn = document.getElementById("buyStealer");
-const stealTargetInput = document.getElementById("stealTarget");
-
 buyStealerBtn.onclick = async () => {
   if (!username) {
     alert("Login first to use The Stealer!");
