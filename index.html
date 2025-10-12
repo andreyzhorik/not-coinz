@@ -307,9 +307,9 @@ function drawWheel(rotDeg) {
     ctx.closePath();
     // color logic
     const out = WHEEL_OUTCOMES[i];
-    let fill = "#3498db";
-    if (out === "Lose" || out === "0.5x" || out === "0.75x") fill = "#e74c3c";
-    if (out === "5.0x" || out === "10x") fill = "#2ecc71";
+    let fill = "#8B681F";
+    if (out === "Lose" || out === "0.5x" || out === "0.75x") fill = "#1D1D1D";
+    if (out === "5.0x" || out === "10x") fill = "#DBC458";
     ctx.fillStyle = fill;
     ctx.fill();
     ctx.strokeStyle = "#111";
