@@ -533,6 +533,9 @@ spinBtn.onclick = () => {
   }
   if (result !== "Lose") {
   const mult = parseFloat(result.replace("x", ""));
+  }
+  if (result !== "Lose") {
+  const mult = parseFloat(result.replace("x", ""));
   if (!Number.isNaN(mult)) {
     win = Math.floor(bet * mult);
     // Announce for big wins
@@ -548,10 +551,11 @@ spinBtn.onclick = () => {
     }
   }
 }
+}
   coins -= bet;
   updateInfo();
   spinning = true;
-}
+  }
 
   // LUCK BONUS LOGIC
   let idx;
