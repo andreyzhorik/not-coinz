@@ -713,6 +713,55 @@ async function renderChat() {
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
+// SEND CHAT HANDLER (unchanged)
+sendChat.onclick = async () => {
+  if (!username) {
+    alert("Login first");
+    return;
+  }
+  const txt = chatInput.value.trim();
+  if (!txt) return;
+  if (txt.startsWith("/w ")) {
+    // Private message
+    const match = txt.match(/^\/w\s+(\S+)\s+(.+)/);
+    if (match) {
+      const toUser = match[1];
+      const message = match[2];
+      await fetch(CHAT_URL, {
+        method: "POST",
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({user: username, to: toUser, text: message})
+      });
+      chatInput.value = "";
+      renderChat();
+      return;
+    }
+  }
+  await fetch(CHAT_URL, {
+    method: "POST",
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({user: username, text: txt})
+  });
+  chatInput.value = "";
+  renderChat();
+};
+
+// INITIALIZE CHAT
+renderChat();
+setInterval(renderChat, 5000);
+
+    // Render user/rank
+    const span = document.createElement("span");
+    span.textContent = `${m.user}: `;
+    span.style.color = color;
+    span.style.fontWeight = fontWeight;
+    div.appendChild(span);
+    div.appendChild(document.createTextNode(m.text));
+    chatMessages.appendChild(div);
+  });
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
 // SHOP LOGIC
 buyVIPBtn.onclick = async () => {
   if (!username) {
