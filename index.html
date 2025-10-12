@@ -592,7 +592,7 @@ spinBtn.onclick = () => {
         if (!Number.isNaN(mult)) {
           win = Math.floor(bet * mult);
           // GLOBAL ANNOUNCEMENT FOR BIG WINS!
-          if (mult >= 5 || win >= 1000) {
+          if (mult >= 5 || win >= 100000) {
             fetch(CHAT_URL, {
               method: "POST",
               headers: {'Content-Type':'application/json'},
