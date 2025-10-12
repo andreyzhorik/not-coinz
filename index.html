@@ -9,9 +9,9 @@
   --panel-bg: #1D1D1D;
   --accent: #DBC458;
   --yellow: #8B681F;
-  --green: #00ADB5; /* For luck potion II text */
+  --green: #0f990c; /* Luck Potion II text */
   --purple: #9b59b6;
-  --white: #DBC458;
+  --white: #EEEEEE;
   --dark: #8B681F;
   --chat-bg: #1D1D1D;
 }
@@ -36,7 +36,6 @@ body {
   box-sizing: border-box;
 }
 
-/* All panel boxes use dark panel color now */
 #left-panel, #right-panel, #controls, #shop, #give-coins, #chat-box {
   background: var(--panel-bg);
   border-radius: 12px;
@@ -99,7 +98,7 @@ h2 {
   border-radius: 4px;
   border: none;
   background: var(--dark);
-  color: var(--yellow);
+  color: var(--white); /* Text inside text boxes is now white */
 }
 
 #chatMessage:focus {
@@ -122,7 +121,7 @@ h2 {
   border: none;
   border-radius: 4px;
   background: var(--dark);
-  color: var(--yellow);
+  color: var(--white); /* Text inside give coins input is now white */
 }
 
 #wheel-pointer {
@@ -156,7 +155,7 @@ h2 {
 
 #controls input {
   background: var(--dark);
-  color: var(--yellow);
+  color: var(--white); /* Text inside controls input is now white */
 }
 
 #controls button {
@@ -210,6 +209,12 @@ canvas {
 .shop-item .vip-label.luck { color: #00ADB5; }
 .shop-item .vip-label.luck-II { color: var(--green); }
 .shop-item .vip-label.stealer { color: orange; }
+
+/* Luck Potion II text green fix (target by class or ID as needed) */
+.shop-item .vip-label.luck-II,
+.shop-item .vip-label.luck-II span {
+  color: var(--green) !important;
+}
 
 #luck-timer {
   font-size: 13px;
