@@ -6,13 +6,13 @@
   <style>
 :root {
   --bg: #222831;
-  --panel-bg: #222831;
+  --panel-bg: #393E46;
   --accent: #00ADB5;
   --yellow: #EEEEEE;
   --purple: #9b59b6;
   --white: #EEEEEE;
   --dark: #393E46;
-  --chat-bg: #222831;
+  --chat-bg: #393E46;
 }
 
 body {
@@ -35,17 +35,17 @@ body {
   box-sizing: border-box;
 }
 
-#left-panel, #right-panel {
+/* All panel boxes use dark panel color now */
+#left-panel, #right-panel, #controls, #shop, #give-coins, #chat-box {
   background: var(--panel-bg);
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 15px;
-  width: 260px;
-  height: calc(100vh - 60px);
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
+  /* Add a little shadow for depth */
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.10);
 }
 
+/* Center panel stays transparent but controls are boxed */
 #center-panel {
   flex: 1;
   display: flex;
@@ -71,10 +71,10 @@ h2 {
 }
 
 #chat-box {
-  margin-top: 20px;
   flex: 1;
   display: flex;
   flex-direction: column;
+  margin-top: 20px;
 }
 
 #chat-messages {
@@ -146,17 +146,6 @@ h2 {
   border-radius: 4px;
 }
 
-#controls {
-  background: var(--panel-bg);
-  padding: 12px;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
 #controls input, #controls button {
   padding: 8px;
   border: none;
@@ -183,9 +172,6 @@ canvas {
 
 #shop {
   margin-top: 30px;
-  background: var(--panel-bg);
-  border-radius: 8px;
-  padding: 15px;
   display: flex;
   flex-direction: column;
   gap: 12px;
