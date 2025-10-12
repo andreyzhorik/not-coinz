@@ -193,6 +193,7 @@ canvas {
 .shop-item .vip-label.vip-plus { color: var(--yellow); }
 .shop-item .vip-label.vip-plusplus { color: var(--purple); }
 .shop-item .vip-label.luck { color: #2ecc71; }
+.shop-item .vip-label.stealer { color: orange; }
 #luck-timer {
   font-size: 13px;
   font-weight: normal;
@@ -259,9 +260,9 @@ canvas {
         <span id="luck-timer-20"></span>
       </div>
       <div class="shop-item">
-  <span class="vip-label" style="color:orange;">💰the stealer</span>
-  <input id="stealTarget" type="text" placeholder="Target username" style="width:90px;">
-  <button id="buyStealer">Use for 2000</button>
+        <span class="vip-label stealer">💰the stealer</span>
+        <input id="stealTarget" type="text" placeholder="Target username" style="width:90px;">
+        <button id="buyStealer">Use for 2000</button>
       </div>
     </div>
   </div>
@@ -425,11 +426,17 @@ async function renderChat() {
   chatMessages.innerHTML = "";
   msgs.slice(-50).forEach(m => {
     const div = document.createElement("div");
-    if (m.user === "ANNOUNCEMENT") {
+    if (m.to && (m.to === username || m.user === username)) {
+      // Private message, only visible to sender and receiver
+      div.style.background = "#282842";
+      div.style.color = "#2ecc71";
+      div.style.fontStyle = "italic";
+      div.textContent = `[PM] ${m.user} → ${m.to}: ${m.text}`;
+    } else if (m.user === "ANNOUNCEMENT") {
       div.style.color = "#f1c40f";
       div.style.fontWeight = "bold";
       div.textContent = `🔔 ${m.text}`;
-    } else {
+    } else if (!m.to) {
       div.textContent = `${m.user}: ${m.text}`;
     }
     chatMessages.appendChild(div);
@@ -584,7 +591,7 @@ spinBtn.onclick = () => {
         if (!Number.isNaN(mult)) {
           win = Math.floor(bet * mult);
           // GLOBAL ANNOUNCEMENT FOR BIG WINS!
-          if (mult >= 5 || win >= 100000) {
+          if (mult >= 5 || win >= 1000) {
             fetch(CHAT_URL, {
               method: "POST",
               headers: {'Content-Type':'application/json'},
@@ -643,7 +650,7 @@ giveBtn.onclick = async () => {
   alert(`Given ${amt} coins to ${to}`);
 };
 
-// CHAT
+// CHAT (supports private messages with "/w username message")
 sendChat.onclick = async () => {
   if (!username) {
     alert("Login first");
@@ -651,31 +658,31 @@ sendChat.onclick = async () => {
   }
   const txt = chatInput.value.trim();
   if (!txt) return;
+  if (txt.startsWith("/w ")) {
+    // Private message
+    const match = txt.match(/^\/w\s+(\S+)\s+(.+)/);
+    if (match) {
+      const toUser = match[1];
+      const message = match[2];
+      await fetch(CHAT_URL, {
+        method: "POST",
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({user: username, to: toUser, text: message})
+      });
+      chatInput.value = "";
+      renderChat();
+      return;
+    }
+  }
   await fetch(CHAT_URL, {
     method: "POST",
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({user: username, text: txt})
   });
-  // Optional: global chat announcement
-      fetch(CHAT_URL, {
-        method: "POST",
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-          user: "ANNOUNCEMENT",
-          text: `${username} just stole ${stealAmount} coins from ${targetName} using 💰the stealer!`
-        })
-      });
-    } else {
-      alert("Target doesn't have enough coins to steal from!");
-    }
-  } else {
-    alert("Steal failed! Better luck next time.");
-  }
-  await updatePlayerOnServer({name: username, password, coins, rank});
-  updateInfo();
-  renderLeaderboard();
+  chatInput.value = "";
+  renderChat();
 };
-  
+
 renderChat();
 setInterval(renderChat, 5000);
 
@@ -780,6 +787,7 @@ buyLuckPotion2Btn.onclick = async () => {
   startLuckTimer(20);
   alert("Luck Potion II +20% activated! Lasts for 5 minutes.");
 };
+// 💰the stealer logic
 buyStealerBtn.onclick = async () => {
   if (!username) {
     alert("Login first to use The Stealer!");
@@ -810,13 +818,31 @@ buyStealerBtn.onclick = async () => {
       target.coins -= stealAmount;
       await updatePlayerOnServer(target);
       alert(`Success! You stole ${stealAmount} coins from ${targetName}.`);
+      // Optional: global chat announcement
+      fetch(CHAT_URL, {
+        method: "POST",
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          user: "ANNOUNCEMENT",
+          text: `${username} just stole ${stealAmount} coins from ${targetName} using 💰the stealer!`
+        })
+      });
+    } else {
+      alert("Target doesn't have enough coins to steal from!");
+    }
+  } else {
+    alert("Steal failed! Better luck next time.");
+  }
+  await updatePlayerOnServer({name: username, password, coins, rank});
+  updateInfo();
+  renderLeaderboard();
+};
 
 // INIT
 drawWheel(rotationDeg);
 updateInfo();
 renderLeaderboard();
 
-// REFRESH leaderboard/chat every 5s
 setInterval(renderLeaderboard, 5000);
 
 </script>
