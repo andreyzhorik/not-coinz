@@ -240,622 +240,146 @@ canvas {
   </div>
 </div>
 <script>
-const API_URL = "https://68e839b2f2707e6128ca35e1.mockapi.io/players";
-const CHAT_URL = "https://68e839b2f2707e6128ca35e1.mockapi.io/chat";
-const MAX_USERS = 10;
-const WHEEL_OUTCOMES = [
-  "1.5x","0.5x","0.5x","1.1x","1.8x","10x","1.9x","Lose","Lose","1.7x",
-  "Lose","1x","Lose","1x","Lose","Lose","1.4x","2.5x","Lose","1.2x",
-  "Lose","Lose","2.0x","Lose","5.0x","1.3x","Lose","1.6x","0.5x","Lose",
-  "2.5x","Lose","0.75x","Lose","Lose","2.0x","Lose","Lose"
+const apiURL = 'https://68e839b2f2707e6128ca35e1.mockapi.io/players';
+let playerData = null;
+let allPlayers = [];
+
+const slices = [
+  "1.5x", "0.5x", "0.5x", "1.1x", "1.8x", "10x", "1.9x", "lose",
+  "lose", "1.7x", "lose", "1x", "lose", "1x", "lose", "lose",
+  "1.4x", "2.5x", "lose", "1.2x", "lose", "lose", "2.0x", "lose",
+  "5.0x", "1.3x", "lose", "1.6x", "0.5x", "lose", "2.5x", "lose",
+  "0.75x", "lose", "lose", "2.0x", "lose", "lose"
 ];
-const N = WHEEL_OUTCOMES.length;
-const sliceDeg = 360 / N;
 
-// DOM
-const canvas = document.getElementById("wheel");
-const ctx = canvas.getContext("2d");
-const spinBtn = document.getElementById("spin");
-const betInput = document.getElementById("bet");
+const wheel = document.getElementById("wheel");
+const spinBtn = document.getElementById("spinBtn");
 const usernameInput = document.getElementById("username");
-const passwordInput = document.getElementById("userPassword");
-const setUsernameBtn = document.getElementById("setUsername");
-const info = document.getElementById("userinfo");
-const chatMessages = document.getElementById("chat-messages");
-const chatInput = document.getElementById("chatMessage");
-const sendChat = document.getElementById("sendChat");
-const giveToUser = document.getElementById("giveToUser");
-const giveAmount = document.getElementById("giveAmount");
-const giveBtn = document.getElementById("giveBtn");
-const buyVIPBtn = document.getElementById("buyVIP");
-const buyVIPplusBtn = document.getElementById("buyVIPplus");
-const buyVIPplusplusBtn = document.getElementById("buyVIPplusplus");
-const buyLuckPotionBtn = document.getElementById("buyLuckPotion");
-const buyLuckPotion2Btn = document.getElementById("buyLuckPotion2");
-const luckTimer5 = document.getElementById("luck-timer-5");
-const luckTimer20 = document.getElementById("luck-timer-20");
-const buyStealerBtn = document.getElementById("buyStealer");
-const stealTargetInput = document.getElementById("stealTarget");
+const passwordInput = document.getElementById("password");
+const loginForm = document.getElementById("loginForm");
+const messageBox = document.getElementById("message");
+const coinDisplay = document.getElementById("coins");
 
-// STATE
-let rotationDeg = 0;
-let spinning = false;
-let username = "";
-let password = "";
-let coins = 100;
-let rank = "None";
-// Potion state
-let luckBonus = 0; // 0, 5, 20
-let luckTimerEnd = 0; // timestamp
-let luckTimerActive = false;
-let luckInterval = null;
-
-// DRAW WHEEL
-function drawWheel(rotDeg) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const cx = canvas.width/2, cy = canvas.height/2;
-  const radius = Math.min(cx, cy) - 10;
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.rotate((rotDeg - 90) * Math.PI / 180);
-  const slice = 2 * Math.PI / N;
-  for (let i = 0; i < N; i++) {
-    const angle = i * slice;
-    ctx.beginPath();
-    ctx.moveTo(0,0);
-    ctx.arc(0,0, radius, angle, angle + slice);
-    ctx.closePath();
-    // color logic
-    const out = WHEEL_OUTCOMES[i];
-    let fill = "#8B681F";
-    if (out === "Lose" || out === "0.5x" || out === "0.75x") fill = "#1D1D1D";
-    if (out === "5.0x" || out === "10x") fill = "#DBC458";
-    ctx.fillStyle = fill;
-    ctx.fill();
-    ctx.strokeStyle = "#111";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // text
-    ctx.save();
-    ctx.rotate(angle + slice/2);
-    ctx.translate(radius * 0.9, 0);
-    ctx.rotate(Math.PI/2);
-    ctx.fillStyle = "white";
-    ctx.font = "bold 14px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(WHEEL_OUTCOMES[i], 0, 0);
-    ctx.restore();
+// Create wheel slices
+function drawWheel() {
+  const numSlices = slices.length;
+  const angle = 360 / numSlices;
+  wheel.innerHTML = "";
+  for (let i = 0; i < numSlices; i++) {
+    const slice = document.createElement("div");
+    slice.className = "slice";
+    slice.style.transform = `rotate(${i * angle}deg) skewY(${90 - angle}deg)`;
+    slice.innerHTML = `<span style="transform: skewY(-${90 - angle}deg) rotate(${angle / 2}deg)">${slices[i]}</span>`;
+    wheel.appendChild(slice);
   }
-  ctx.restore();
 }
 
-function updateInfo() {
-  info.textContent = username
-    ? `${username}: ${coins} | ${rank}`
-    : "Not logged in";
-  if (rank === "VIP") info.style.color = "#ffe066";
-  else if (rank === "VIP+") info.style.color = "#f1c40f";
-  else if (rank === "VIP++") info.style.color = "#9b59b6";
-  else info.style.color = "white";
-}
+drawWheel();
 
+// Fetch players
 async function fetchPlayers() {
-  try {
-    const r = await fetch(API_URL);
-    return await r.json();
-  } catch(e) {
-    return [];
-  }
+  const res = await fetch(apiURL);
+  return await res.json();
 }
 
-async function updatePlayerOnServer(player) {
-  const list = await fetchPlayers();
-  const existing = list.find(p => p.name === player.name);
-  if (existing) {
-    await fetch(`${API_URL}/${existing.id}`, {
-      method: "PUT",
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(player)
-    });
-  } else {
-    await fetch(API_URL, {
-      method: "POST",
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(player)
-    });
-  }
-}
+// Login system
+loginForm.onsubmit = async (e) => {
+  e.preventDefault();
+  const username = usernameInput.value.trim();
+  const password = passwordInput.value;
 
-async function renderLeaderboard() {
-  const ul = document.getElementById("leaderboardList");
-  ul.innerHTML = "";
-  const list = await fetchPlayers();
-  list.sort((a, b) => b.coins - a.coins);
-  list.slice(0, MAX_USERS).forEach((p, i) => {
-    let color = "#fff";
-    if (p.rank === "VIP") color = "#ffe066";
-    else if (p.rank === "VIP+") color = "#f1c40f";
-    else if (p.rank === "VIP++") color = "#9b59b6";
-    const nameSpan = `<span style="color:${color};font-weight:bold;">${p.name}</span>`;
-    const li = document.createElement("li");
-    li.innerHTML = `${i + 1}. ${nameSpan}: ${p.coins} | ${p.rank || "None"}`;
-    ul.appendChild(li);
-  });
-}
-
-async function fetchChat() {
-  try {
-    const r = await fetch(CHAT_URL);
-    return await r.json();
-  } catch(e) {
-    return [];
-  }
-}
-
-// CHAT (supports private messages with "/w username message")
-async function renderChat() {
-  const msgs = await fetchChat();
-  const players = await fetchPlayers(); // For ranks
-  chatMessages.innerHTML = "";
-  msgs.slice(-50).forEach(m => {
-    // Private message: Only show if current user is sender or recipient
-    if (m.to && m.to !== username && m.user !== username) {
-      // Not for you, skip!
-      return;
-    }
-
-    const div = document.createElement("div");
-
-    // Private message style
-    if (m.to) {
-      div.style.background = "#282842";
-      div.style.color = "#2ecc71";
-      div.style.fontStyle = "italic";
-      div.textContent = `[PM] ${m.user} → ${m.to}: ${m.text}`;
-      chatMessages.appendChild(div);
-      return;
-    }
-
-    // Announcement
-    if (m.user === "ANNOUNCEMENT") {
-      div.style.color = "#f1c40f";
-      div.style.fontWeight = "bold";
-      div.textContent = `🔔 ${m.text}`;
-      chatMessages.appendChild(div);
-      return;
-    }
-
-    // Get rank for color
-    let color = "#fff";
-    let fontWeight = "normal";
-    const userObj = players.find(p => p.name === m.user);
-    if (userObj) {
-      if (userObj.rank === "VIP") {
-        color = "#ffe066";
-        fontWeight = "bold";
-      } else if (userObj.rank === "VIP+") {
-        color = "#f1c40f";
-        fontWeight = "bold";
-      } else if (userObj.rank === "VIP++") {
-        color = "#9b59b6";
-        fontWeight = "bold";
-      }
-    }
-
-    // Render user/rank
-    const span = document.createElement("span");
-    span.textContent = `${m.user}: `;
-    span.style.color = color;
-    span.style.fontWeight = fontWeight;
-    div.appendChild(span);
-    div.appendChild(document.createTextNode(m.text));
-    chatMessages.appendChild(div);
-  });
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-// SEND CHAT HANDLER
-sendChat.onclick = async () => {
-  if (!username) {
-    alert("Login first");
-    return;
-  }
-  const txt = chatInput.value.trim();
-  if (!txt) return;
-  if (txt.startsWith("/w ")) {
-    // Private message
-    const match = txt.match(/^\/w\s+(\S+)\s+(.+)/);
-    if (match) {
-      const toUser = match[1];
-      const message = match[2];
-      await fetch(CHAT_URL, {
-        method: "POST",
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({user: username, to: toUser, text: message})
-      });
-      chatInput.value = "";
-      renderChat();
-      return;
-    }
-  }
-  await fetch(CHAT_URL, {
-    method: "POST",
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({user: username, text: txt})
-  });
-  chatInput.value = "";
-  renderChat();
-};
-
-// TIMER for luck potions
-function startLuckTimer(percent) {
-  luckBonus = percent;
-  luckTimerEnd = Date.now() + 5 * 60 * 1000; // 5 min
-  luckTimerActive = true;
-  updateLuckTimerDisplay();
-  buyLuckPotionBtn.disabled = true;
-  buyLuckPotion2Btn.disabled = true;
-  if (luckInterval) clearInterval(luckInterval);
-  luckInterval = setInterval(() => {
-    updateLuckTimerDisplay();
-    if (Date.now() >= luckTimerEnd) {
-      clearInterval(luckInterval);
-      luckBonus = 0;
-      luckTimerActive = false;
-      luckTimerEnd = 0;
-      buyLuckPotionBtn.disabled = false;
-      buyLuckPotion2Btn.disabled = false;
-      luckTimer5.textContent = "";
-      luckTimer20.textContent = "";
-      alert("Luck potion effect has ended.");
-    }
-  }, 1000);
-}
-
-function updateLuckTimerDisplay() {
-  if (!luckTimerActive) {
-    luckTimer5.textContent = "";
-    luckTimer20.textContent = "";
-    return;
-  }
-  const seconds = Math.max(0, Math.floor((luckTimerEnd - Date.now()) / 1000));
-  const min = Math.floor(seconds / 60);
-  const sec = seconds % 60;
-  if (luckBonus === 5) {
-    luckTimer5.textContent = `⏳ ${min}:${sec < 10 ? "0" : ""}${sec}`;
-    luckTimer20.textContent = "";
-  } else if (luckBonus === 20) {
-    luckTimer20.textContent = `⏳ ${min}:${sec < 10 ? "0" : ""}${sec}`;
-    luckTimer5.textContent = "";
-  }
-}
-
-// LOGIN
-setUsernameBtn.onclick = async () => {
-  const u = usernameInput.value.trim();
-  const p = passwordInput.value;
-  if (!u || !p) {
-    alert("Enter username and password");
-    return;
-  }
-  if (u.length > 10) {
-    alert("Username max length is 10");
-    return;
-  }
-  let players = await fetchPlayers();
-  if (players.length >= MAX_USERS && !players.some(pl => pl.name === u)) {
-    alert("Server full (max 10 users)");
-    return;
-  }
-  const existing = players.find(pl => pl.name === u);
-  if (existing) {
-    if (existing.password !== p) {
-      alert("Wrong password");
-      return;
-    }
-    username = u;
-    password = p;
-    coins = existing.coins;
-    rank = existing.rank || "None";
-  } else {
-    username = u;
-    password = p;
-    coins = 100;
-    rank = "None";
-    await updatePlayerOnServer({name: u, password: p, coins, rank});
-  }
-  usernameInput.disabled = true;
-  passwordInput.disabled = true;
-  setUsernameBtn.disabled = true;
-  updateInfo();
-  renderLeaderboard();
-  renderChat();
-};
-
-// SPIN LOGIC
-spinBtn.onclick = () => {
-  if (!username) {
-    alert("Login first");
-    return;
-  }
-  if (spinning) return;
-  const bet = Math.floor(Number(betInput.value) || 0);
-  if (bet <= 0 || bet > coins) {
-    alert("Invalid bet");
-    return;
-  }
-  coins -= bet;
-  updateInfo();
-  spinning = true;
-
-  // Luck bonus logic if used
-  let idx;
-  if (luckBonus > 0) {
-    let weighted = [];
-    for (let i = 0; i < N; i++) {
-      if (WHEEL_OUTCOMES[i] === "Lose") {
-        weighted.push(i);
-      } else {
-        let weight = 1 + luckBonus / 100;
-        for (let w = 0; w < weight; w++) weighted.push(i);
-      }
-    }
-    idx = weighted[Math.floor(Math.random() * weighted.length)];
-  } else {
-    idx = Math.floor(Math.random() * N);
-  }
-
-  const result = WHEEL_OUTCOMES[idx];
-  const currentNorm = ((rotationDeg % 360) + 360) % 360;
-  const sliceCenter = idx * sliceDeg + sliceDeg / 2;
-  const baseRot = (360 - sliceCenter) % 360;
-  const delta = (baseRot - currentNorm + 360) % 360;
-  const fullSpins = 6 + Math.floor(Math.random() * 5);
-  const target = rotationDeg + fullSpins * 360 + delta;
-  const start = rotationDeg;
-  const duration = 4200;
-  const t0 = performance.now();
-
-  function step(t) {
-    const elapsed = t - t0;
-    const p = Math.min(elapsed / duration, 1);
-    const ease = 1 - Math.pow(1 - p, 3);
-    rotationDeg = start + (target - start) * ease;
-    drawWheel(rotationDeg);
-
-    if (p < 1) {
-      requestAnimationFrame(step);
-    } else {
-      rotationDeg = baseRot + 360 * Math.floor(rotationDeg / 360);
-      let win = 0;
-      let mult = 0;
-      if (result !== "Lose") {
-        mult = parseFloat(result.replace("x", ""));
-        if (!Number.isNaN(mult)) {
-          win = Math.floor(bet * mult);
-          // GLOBAL ANNOUNCEMENT FOR BIG WINS!
-          if (mult >= 10 || win >= 100000) {
-            fetch(CHAT_URL, {
-              method: "POST",
-              headers: {'Content-Type':'application/json'},
-              body: JSON.stringify({
-                user: "ANNOUNCEMENT",
-                text: `${username} JUST WON ${win} COINS WITH A ${result} SPIN!`
-              })
-            });
-          }
-        }
-      }
-      if (result === "Lose") {
-        alert("😢 You lost your bet!");
-      } else {
-        alert(`🎉 You won ${win} coins! (${result})`);
-      }
-      coins += win;
-      if (coins <= 0) coins = 100;
-      updatePlayerOnServer({name: username, password, coins, rank});
-      updateInfo();
-      renderLeaderboard();
-      spinning = false;
-    }
-  }
-  requestAnimationFrame(step);
-};
-
-// GIVE COINS
-giveBtn.onclick = async () => {
-  if (!username) {
-    alert("Login first");
-    return;
-  }
-  const to = giveToUser.value.trim();
-  const amt = Math.floor(Number(giveAmount.value) || 0);
-  if (!to || amt <= 0) {
-    alert("Invalid give input");
-    return;
-  }
-  if (coins < amt) {
-    alert("You don't have enough coins");
-    return;
-  }
-  const list = await fetchPlayers();
-  const target = list.find(p => p.name === to);
-  if (!target) {
-    alert("Recipient not found");
-    return;
-  }
-  target.coins += amt;
-  coins -= amt;
-  await updatePlayerOnServer(target);
-  await updatePlayerOnServer({name: username, password, coins, rank});
-  updateInfo();
-  renderLeaderboard();
-  alert(`Given ${amt} coins to ${to}`);
-};
-
-// SHOP LOGIC
-buyVIPBtn.onclick = async () => {
-  if (!username) {
-    alert("Login first to buy VIP!");
-    return;
-  }
-  if (rank === "VIP" || rank === "VIP+" || rank === "VIP++") {
-    alert("You already have a VIP rank or higher!");
-    return;
-  }
-  if (coins < 1000) {
-    alert("Not enough coins for VIP!");
-    return;
-  }
-  coins -= 1000;
-  rank = "VIP";
-  await updatePlayerOnServer({name: username, password, coins, rank});
-  updateInfo();
-  renderLeaderboard();
-  alert("You bought VIP!");
-};
-buyVIPplusBtn.onclick = async () => {
-  if (!username) {
-    alert("Login first to buy VIP+!");
-    return;
-  }
-  if (rank === "VIP+" || rank === "VIP++") {
-    alert("You already have VIP+ or higher!");
-    return;
-  }
-  if (coins < 5000) {
-    alert("Not enough coins for VIP+!");
-    return;
-  }
-  coins -= 5000;
-  rank = "VIP+";
-  await updatePlayerOnServer({name: username, password, coins, rank});
-  updateInfo();
-  renderLeaderboard();
-  alert("You bought VIP+!");
-};
-buyVIPplusplusBtn.onclick = async () => {
-  if (!username) {
-    alert("Login first to buy VIP++!");
-    return;
-  }
-  if (rank === "VIP++") {
-    alert("You already have VIP++!");
-    return;
-  }
-  if (coins < 10000) {
-    alert("Not enough coins for VIP++!");
-    return;
-  }
-  coins -= 10000;
-  rank = "VIP++";
-  await updatePlayerOnServer({name: username, password, coins, rank});
-  updateInfo();
-  renderLeaderboard();
-  alert("You bought VIP++!");
-};
-buyLuckPotionBtn.onclick = async () => {
-  if (!username) {
-    alert("Login first to buy Luck Potion!");
-    return;
-  }
-  if (coins < 500) {
-    alert("Not enough coins for Luck Potion!");
-    return;
-  }
-  if (luckTimerActive) {
-    alert("A luck potion is already active!");
-    return;
-  }
-  coins -= 500;
-  await updatePlayerOnServer({name: username, password, coins, rank});
-  updateInfo();
-  renderLeaderboard();
-  startLuckTimer(5);
-  alert("Luck Potion +5% activated! Lasts for 5 minutes.");
-};
-buyLuckPotion2Btn.onclick = async () => {
-  if (!username) {
-    alert("Login first to buy Luck Potion II!");
-    return;
-  }
-  if (coins < 1500) {
-    alert("Not enough coins for Luck Potion II!");
-    return;
-  }
-  if (luckTimerActive) {
-    alert("A luck potion is already active!");
-    return;
-  }
-  coins -= 1500;
-  await updatePlayerOnServer({name: username, password, coins, rank});
-  updateInfo();
-  renderLeaderboard();
-  startLuckTimer(20);
-  alert("Luck Potion II +20% activated! Lasts for 5 minutes.");
-};
-// 💰the stealer logic
-buyStealerBtn.onclick = async () => {
-  if (!username) {
-    alert("Login first to use The Stealer!");
-    return;
-  }
-  if (coins < 2000) {
-    alert("Not enough coins for The Stealer!");
-    return;
-  }
-  const targetName = stealTargetInput.value.trim();
-  if (!targetName || targetName === username) {
-    alert("Enter a valid username to steal from (not yourself)!");
-    return;
-  }
   const players = await fetchPlayers();
-  const target = players.find(p => p.name === targetName);
-  if (!target) {
-    alert("Target user not found!");
-    return;
-  }
-  coins -= 2000;
+  let player = players.find(p => p.name === username);
 
-  // Steal logic: 25% chance
-  if (Math.random() < 0.25) {
-    const stealAmount = Math.floor(target.coins * 0.10);
-    if (stealAmount > 0) {
-      coins += stealAmount;
-      target.coins -= stealAmount;
-      await updatePlayerOnServer(target);
-      alert(`Success! You stole ${stealAmount} coins from ${targetName}.`);
-      // Optional: global chat announcement
-      fetch(CHAT_URL, {
-        method: "POST",
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-          user: "ANNOUNCEMENT",
-          text: `${username} just stole ${stealAmount} coins from ${targetName} using 💰the stealer!`
-        })
-      });
+  if (player) {
+    if (player.password === password) {
+      playerData = player;
+      messageBox.textContent = `Welcome back ${username}!`;
+      showGameUI();
     } else {
-      alert("Target doesn't have enough coins to steal from!");
+      messageBox.textContent = "Wrong password!";
     }
   } else {
-    alert("Steal failed! Better luck next time.");
+    const newPlayer = { name: username, password, coins: 100, notCoins: 0 };
+    const res = await fetch(apiURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newPlayer)
+    });
+    playerData = await res.json();
+    messageBox.textContent = `Welcome ${username}, you got 100 coins!`;
+    showGameUI();
   }
-  await updatePlayerOnServer({name: username, password, coins, rank});
-  updateInfo();
-  renderLeaderboard();
 };
 
-// INIT
-drawWheel(rotationDeg);
-updateInfo();
-renderLeaderboard();
-renderChat();
+function showGameUI() {
+  document.getElementById("loginBox").style.display = "none";
+  document.getElementById("gameBox").style.display = "block";
+  updateCoins();
+}
 
-setInterval(renderLeaderboard, 5000);
-setInterval(renderChat, 5000);
+// Sync coins from database every few seconds
+async function syncCoins() {
+  if (!playerData) return;
+  const res = await fetch(`${apiURL}/${playerData.id}`);
+  const freshData = await res.json();
+  playerData.coins = freshData.coins;
+  updateCoins();
+}
+setInterval(syncCoins, 3000);
 
+function updateCoins() {
+  coinDisplay.textContent = `💰 ${Math.round(playerData.coins)} coins`;
+}
+
+// Spin wheel logic
+spinBtn.onclick = async () => {
+  if (!playerData) return;
+  if (playerData.coins < 10) {
+    messageBox.textContent = "Not enough coins to spin!";
+    return;
+  }
+
+  // Deduct spin cost
+  playerData.coins -= 10;
+  updateCoins();
+  await updatePlayer();
+
+  const deg = Math.floor(5000 + Math.random() * 5000);
+  wheel.style.transition = "transform 5s ease-out";
+  wheel.style.transform = `rotate(${deg}deg)`;
+  spinBtn.disabled = true;
+
+  setTimeout(async () => {
+    wheel.style.transition = "none";
+    const actualDeg = deg % 360;
+    const sliceSize = 360 / slices.length;
+    const index = Math.floor((360 - actualDeg) / sliceSize) % slices.length;
+    const result = slices[index];
+
+    if (result.includes("x")) {
+      const multiplier = parseFloat(result.replace("x", ""));
+      const winAmount = Math.round(10 * multiplier);
+      playerData.coins += winAmount;
+      messageBox.textContent = `🎉 You won ${winAmount} coins (${multiplier}x)!`;
+    } else {
+      messageBox.textContent = "😢 You lost!";
+    }
+
+    updateCoins();
+    await updatePlayer();
+    spinBtn.disabled = false;
+  }, 5200);
+};
+
+// Update player in API
+async function updatePlayer() {
+  await fetch(`${apiURL}/${playerData.id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(playerData)
+  });
+}
 </script>
 </body>
 </html>
