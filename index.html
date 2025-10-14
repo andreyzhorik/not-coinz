@@ -635,16 +635,6 @@ spinBtn.onclick = () => {
         mult = parseFloat(result.replace("x", ""));
         if (!Number.isNaN(mult)) {
           win = Math.floor(bet * mult);
-          // GLOBAL ANNOUNCEMENT FOR BIG WINS!
-          if (mult >= 10 || win >= 100000) {
-            fetch(CHAT_URL, {
-              method: "POST",
-              headers: {'Content-Type':'application/json'},
-              body: JSON.stringify({
-                user: "ANNOUNCEMENT",
-                text: `${username} JUST WON ${win} COINS WITH A ${result} SPIN!`
-              })
-            });
           }
         }
       }
@@ -827,15 +817,6 @@ buyStealerBtn.onclick = async () => {
       target.coins -= stealAmount;
       await updatePlayerOnServer(target);
       alert(`Success! You stole ${stealAmount} coins from ${targetName}.`);
-      // Optional: global chat announcement
-      fetch(CHAT_URL, {
-        method: "POST",
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-          user: "ANNOUNCEMENT",
-          text: `${username} just stole ${stealAmount} coins from ${targetName} using 💰the stealer!`
-        })
-      });
     } else {
       alert("Target doesn't have enough coins to steal from!");
     }
