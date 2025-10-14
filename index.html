@@ -652,7 +652,6 @@ spinBtn.onclick = () => {
     }
   }
   requestAnimationFrame(step);
-};
 
 // GIVE COINS
 giveBtn.onclick = async () => {
@@ -697,7 +696,7 @@ buyVIPBtn.onclick = async () => {
   }
   if (coins < 1000) {
     alert("Not enough coins for VIP!");
-    return;
+    return
   }
   coins -= 1000;
   rank = "VIP";
